@@ -1,0 +1,38 @@
+name: Create OCI VCN With Terraform
+on:
+  workflow_dispatch:
+
+jobs: 
+  OCI-IaC-Deployment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout Code'
+        uses: actions/checkout@v2
+
+      - name: 'Write OCI Config & Key Files'
+        run: |
+          mkdir -p ~/.oci
+          echo "[DEFAULT]" >> ~/.oci/config
+          echo "user=${{ secrets.OCI_USER_OCID }}" >> ~/.oci/config
+          echo "fingerprint=${{ secrets.OCI_FINGERPRINT }}" >> ~/.oci/config
+          echo "region=${{ secrets.OCI_REGION }}" >> ~/.oci/config
+          echo "tenancy=${{ secrets.OCI_TENANCY_OCID }}" >> ~/.oci/config
+          echo "key_file=~/.oci/key.pem" >> ~/.oci/config
+          echo "${{ secrets.OCI_KEY_FILE }}" >> ~/.oci/key.pem
+          chmod 600 ~/.oci/key.pem
+
+      - name: 'Fix OCI Config File Permissions'
+        run: |
+          chmod 600 ~/.oci/config
+          chmod 600 ~/.oci/key.pem
+
+      - name: 'Set up Terraform'
+        uses: hashicorp/setup-terraform@v3
+
+      - name: 'Terraform Init'
+        run: terraform init
+        working-directory: Terraform
+
+      - name: 'Terraform Apply'
+        run: terraform apply -auto-approve -input=false
+        working-directory: Terraform
