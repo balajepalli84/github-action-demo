@@ -23,14 +23,22 @@ jobs:
           curl -sSL -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
             "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=oci" > id-token.json
 
-          echo "Decoded JWT (Header & Payload):"
           JWT=$(jq -r '.value' id-token.json)
 
           echo "==== HEADER ===="
-          echo "$JWT" | cut -d '.' -f1 | base64 -d
+          echo "$JWT" | cut -d '.' -f1 | base64 -d 2>/dev/null || echo "Failed to decode header"
 
           echo "==== PAYLOAD ===="
-          echo "$JWT" | cut -d '.' -f2 | base64 -d
+          echo "$JWT" | cut -d '.' -f2 | base64 -d 2>/dev/null || echo "Failed to decode payload"
 
-          echo "==== RAW JWT ===="
-          echo "$JWT"
+          echo "==== RAW JWT (wrapped) ===="
+          echo "$JWT" | fold -w 80
+
+          echo "Saving token to file..."
+          echo "$JWT" > token.jwt
+
+      - name: 'Upload JWT as Artifact'
+        uses: actions/upload-artifact@v4
+        with:
+          name: github-oidc-jwt
+          path: token.jwt
