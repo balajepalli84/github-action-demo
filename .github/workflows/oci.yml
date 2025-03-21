@@ -1,30 +1,45 @@
 name: Create OCI VCN With Terraform
+
 on:
   workflow_dispatch:
+
+permissions:
+  id-token: write       # Required for GitHub OIDC
+  contents: read
 
 jobs: 
   OCI-IaC-Deployment:
     runs-on: ubuntu-latest
+
     steps:
       - name: 'Checkout Code'
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
-      - name: 'Write OCI Config & Key Files'
+      - name: 'Request GitHub OIDC Token'
+        id: get-jwt
         run: |
+          echo "Requesting OIDC token from GitHub..."
+          curl -sLS -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=oci" > id-token.json
+          cat id-token.json
+
+      - name: 'Exchange OIDC token with OCI'
+        id: get-oci-token
+        run: |
+          JWT=$(jq -r '.value' id-token.json)
+
+          echo "Setting up temporary OCI config using OIDC..."
+
           mkdir -p ~/.oci
-          echo "[DEFAULT]" >> ~/.oci/config
-          echo "user=${{ secrets.OCI_USER_OCID }}" >> ~/.oci/config
-          echo "fingerprint=${{ secrets.OCI_FINGERPRINT }}" >> ~/.oci/config
-          echo "region=${{ secrets.OCI_REGION }}" >> ~/.oci/config
-          echo "tenancy=${{ secrets.OCI_TENANCY_OCID }}" >> ~/.oci/config
-          echo "key_file=~/.oci/key.pem" >> ~/.oci/config
-          echo "${{ secrets.OCI_KEY_FILE }}" >> ~/.oci/key.pem
-          chmod 600 ~/.oci/key.pem
 
-      - name: 'Fix OCI Config File Permissions'
-        run: |
-          chmod 600 ~/.oci/config
-          chmod 600 ~/.oci/key.pem
+          cat <<EOF > ~/.oci/config
+          [DEFAULT]
+          region=${{ secrets.OCI_REGION }}
+          delegation_token_file=~/.oci/token
+          EOF
+
+          echo "$JWT" > ~/.oci/token
+          chmod 600 ~/.oci/config ~/.oci/token
 
       - name: 'Set up Terraform'
         uses: hashicorp/setup-terraform@v3
