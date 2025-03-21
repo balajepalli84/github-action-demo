@@ -1,14 +1,14 @@
-name: Create OCI VCN With Terraform
+name: Print GitHub OIDC Token
 
 on:
   workflow_dispatch:
 
 permissions:
-  id-token: write       # Required for GitHub OIDC
+  id-token: write
   contents: read
 
 jobs: 
-  OCI-IaC-Deployment:
+  Print-JWT:
     runs-on: ubuntu-latest
 
     steps:
@@ -18,34 +18,19 @@ jobs:
       - name: 'Request GitHub OIDC Token'
         id: get-jwt
         run: |
-          echo "Requesting OIDC token from GitHub..."
-          curl -sLS -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=oci" > id-token.json
-          cat id-token.json
+          echo "Fetching OIDC token from GitHub..."
 
-      - name: 'Exchange OIDC token with OCI'
-        id: get-oci-token
-        run: |
+          curl -sSL -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=oci" > id-token.json
+
+          echo "Decoded JWT (Header & Payload):"
           JWT=$(jq -r '.value' id-token.json)
 
-          echo "Setting up temporary OCI config using OIDC..."
+          echo "==== HEADER ===="
+          echo "$JWT" | cut -d '.' -f1 | base64 -d
 
-          mkdir -p ~/.oci
+          echo "==== PAYLOAD ===="
+          echo "$JWT" | cut -d '.' -f2 | base64 -d
 
-          cat <<EOF > ~/.oci/config
-          [DEFAULT]
-          region=${{ secrets.OCI_REGION }}
-          delegation_token_file=~/.oci/token
-          EOF
-
-          echo "$JWT" > ~/.oci/token
-          chmod 600 ~/.oci/config ~/.oci/token
-
-      - name: 'Set up Terraform'
-        uses: hashicorp/setup-terraform@v3
-
-      - name: 'Terraform Init'
-        run: terraform init
-
-      - name: 'Terraform Apply'
-        run: terraform apply -auto-approve -input=false
+          echo "==== RAW JWT ===="
+          echo "$JWT"
