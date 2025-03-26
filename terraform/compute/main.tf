@@ -11,6 +11,11 @@ resource "oci_core_instance" "my_tf_instance" {
   display_name        = var.instance_name
   shape               = var.shape
 
+  shape_config {
+    ocpus         = var.ocpus
+    memory_in_gbs = var.memory_in_gbs
+  }
+
   source_details {
     source_type = "image"
     source_id   = var.image_id
