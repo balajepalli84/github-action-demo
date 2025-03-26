@@ -4,6 +4,6 @@ compartment_ocid = "ocid1.compartment.oc1..aaaaaaaafklcekq7wnwrt4zxeizcrmvhltz6w
 availability_domain = "uFjs:US-ASHBURN-AD-1"
 subnet_id           = "ocid1.subnet.oc1.iad.aaaaaaaavbogtxo5uxelricigx4jm6nw77xaannxi35v3dpmtorlzzlfjvqq"
 instance_name       = "my-github-tf-instance"
-shape               = "VM.Standard.E2.1.Micro"
+shape               = "VM.Standard.E5.Flex"
 image_id            = "ocid1.image.oc1.iad.aaaaaaaa6ihkh6yp6f2e2np4fkucu7rv7d3v6uogy7ya7osfmogkznjaveha"
 
