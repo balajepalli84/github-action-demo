@@ -1,0 +1,149 @@
+name: Deploy VCN with GitHub OIDC to OCI UPST
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  upst-terraform:
+    runs-on: ubuntu-latest
+
+    env:
+      CLIENT_ID: "8aa264f421d646e98699b716b2e9b72e"
+      CLIENT_SECRET: "idcscs-59183ab6-657c-4a24-ad24-ffae6c8bc061"
+      DOMAIN_BASE_URL: "https://idcs-8dd307747946491cbfe1b7a3f063db0d.identity.oraclecloud.com"
+      OCI_TENANCY: ${{ vars.OCI_TENANCY }}
+      OCI_REGION: ${{ vars.OCI_REGION }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate RSA Key Pair
+        run: |
+          mkdir -p .oci
+          openssl genrsa -out .oci/temp_private.pem 2048
+          openssl rsa -in .oci/temp_private.pem -pubout -out .oci/temp_public.pem
+          chmod 600 .oci/temp_private.pem .oci/temp_public.pem
+
+      - name: Convert Private Key to Single Line (No Headers)
+        id: privkey
+        run: |
+          awk '/BEGIN PRIVATE KEY/ {skip=1; next} /END PRIVATE KEY/ {skip=0; next} skip {gsub(/\r/, ""); printf "%s", $0;}' .oci/temp_private.pem > .oci/private_key.one_line.pem
+
+      - name: Convert Public Key (No Headers)
+        id: pubkey
+        run: |
+          awk '/BEGIN PUBLIC KEY/ {skip=1; next} /END PUBLIC KEY/ {skip=0; next} skip {gsub(/\r/, ""); printf "%s", $0;}' .oci/temp_public.pem > .oci/public_key.one_line.pem
+          PUBKEY=$(cat .oci/public_key.one_line.pem)
+          echo "pubkey=$PUBKEY" >> $GITHUB_OUTPUT
+
+      - name: Fetch GitHub OIDC Token
+        id: jwt
+        run: |
+          curl -sSL -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=${CLIENT_ID}" > id-token.json
+
+          JWT=$(jq -r '.value' id-token.json)
+          echo "$JWT" > .oci/id-token.jwt
+          echo "jwt=$JWT" >> $GITHUB_OUTPUT
+
+      - name: Exchange JWT for OCI UPST
+        id: upst
+        continue-on-error: true
+        run: |
+          AUTH_HEADER=$(printf "%s" "${CLIENT_ID}:${CLIENT_SECRET}" | base64 | tr -d '\n')
+          SUBJECT_TOKEN=$(tr -d '\n' < .oci/id-token.jwt)
+          PUBKEY=$(tr -d '\n' < .oci/public_key.one_line.pem)
+
+          RESPONSE=$(curl -sSL \
+            --header "Content-Type: application/x-www-form-urlencoded" \
+            --header "Authorization: Basic $AUTH_HEADER" \
+            --data-urlencode "grant_type=urn:ietf:params:oauth:grant-type:token-exchange" \
+            --data-urlencode "requested_token_type=urn:oci:token-type:oci-upst" \
+            --data-urlencode "subject_token=$SUBJECT_TOKEN" \
+            --data-urlencode "subject_token_type=jwt" \
+            --data-urlencode "public_key=$PUBKEY" \
+            "${DOMAIN_BASE_URL}/oauth2/v1/token")
+
+          echo "$RESPONSE" > .oci/upst-response.json
+          jq -r '.token' .oci/upst-response.json | tr -d '\n' > .oci/upst.token
+
+          if [ -s .oci/upst.token ]; then
+            echo "✅ UPST token was successfully extracted"
+            echo "success=true" >> $GITHUB_ENV
+          else
+            echo "‼️ Failed to extract UPST token"
+            cat .oci/upst-response.json
+            echo "success=false" >> $GITHUB_ENV
+          fi
+
+          {
+            echo "==== GitHub OIDC Token ===="
+            cat .oci/id-token.jwt | fold -w 80
+            echo ""
+            echo "==== UPST Response ===="
+            cat .oci/upst-response.json | fold -w 80
+            echo ""
+            echo "==== Extracted UPST Token (if present) ===="
+            [ -s .oci/upst.token ] && cat .oci/upst.token | fold -w 80 || echo "(not available)"
+          } > .oci/token-debug.log
+
+      - name: Configure OCI CLI for Terraform
+        if: env.success == 'true'
+        run: |
+          mkdir -p $HOME/.oci
+          cp .oci/temp_private.pem $HOME/.oci/temp_private.pem
+          cp .oci/upst.token $HOME/.oci/upst.token
+          chmod 600 $HOME/.oci/temp_private.pem $HOME/.oci/upst.token
+
+          FINGERPRINT=$(openssl rsa -pubout -outform DER -in $HOME/.oci/temp_private.pem 2>/dev/null | openssl md5 -c | awk '{print $2}')
+
+          echo "[upst]" > $HOME/.oci/config
+          echo "region=${OCI_REGION}" >> $HOME/.oci/config
+          echo "tenancy=${OCI_TENANCY}" >> $HOME/.oci/config
+          echo "fingerprint=${FINGERPRINT}" >> $HOME/.oci/config
+          echo "key_file=$HOME/.oci/temp_private.pem" >> $HOME/.oci/config
+          echo "security_token_file=$HOME/.oci/upst.token" >> $HOME/.oci/config
+
+      - name: Upload Debug Files (Always)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oci-upst-debug
+          path: |
+            .oci/token-debug.log
+            .oci/upst-response.json
+            .oci/id-token.jwt
+            .oci/public_key.one_line.pem
+            .oci/temp_private.pem
+            .oci/curl-command.sh
+            .oci/upst.token
+            $HOME/.oci/config
+            $HOME/.oci/temp_private.pem
+
+      - name: Set up Terraform
+        if: env.success == 'true'
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init (VCN)
+        if: env.success == 'true'
+        run: terraform init
+        working-directory: terraform/vcn
+
+      - name: Terraform Plan (VCN)
+        if: env.success == 'true'
+        run: terraform plan
+        working-directory: terraform/vcn
+        env:
+          OCI_CLI_PROFILE: upst
+
+      - name: Terraform Apply (VCN)
+        if: env.success == 'true'
+        run: terraform apply -auto-approve
+        working-directory: terraform/vcn
+        env:
+          OCI_CLI_PROFILE: upst

@@ -1,0 +1,8 @@
+region              = "us-ashburn-1"
+tenancy_ocid        = "ocid1.tenancy.oc1..aaaa..."
+compartment_ocid    = "ocid1.compartment.oc1..aaaa..."
+availability_domain = "Uocm:US-ASHBURN-AD-1"
+subnet_id           = "ocid1.subnet.oc1..aaaa..."
+instance_name       = "my-instance"
+shape               = "VM.Standard.E2.1.Micro"
+image_id            = "ocid1.image.oc1..standard-ubuntu-image-id"
