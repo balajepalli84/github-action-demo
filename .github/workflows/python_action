@@ -1,0 +1,9 @@
+- name: Set up UPST config via Python
+  if: env.success != 'false'
+  run: python3 scripts/oidc_to_upst.py
+  env:
+      CLIENT_ID: "8aa264f421d646e98699b716b2e9b72e"
+      CLIENT_SECRET: "idcscs-59183ab6-657c-4a24-ad24-ffae6c8bc061"
+      DOMAIN_BASE_URL: "https://idcs-8dd307747946491cbfe1b7a3f063db0d.identity.oraclecloud.com"
+      OCI_TENANCY: ${{ vars.OCI_TENANCY }}
+      OCI_REGION: ${{ vars.OCI_REGION }}
