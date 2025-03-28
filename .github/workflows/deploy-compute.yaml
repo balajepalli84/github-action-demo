@@ -66,4 +66,21 @@ jobs:
             .oci/id-token.json
             .oci/upst.token
             $HOME/.oci/config
+      - name: Debug Token and Config Files
+        run: |
+          echo "===== .oci/upst.token (length) ====="
+          wc -c < .oci/upst.token || true
+
+          echo "===== .oci/id-token.json ====="
+          jq '.' .oci/id-token.json || cat .oci/id-token.json
+
+          echo "===== .oci/temp_private.pem (first 5 lines) ====="
+          head -n 5 .oci/temp_private.pem || true
+
+          echo "===== ~/.oci/config ====="
+          cat $HOME/.oci/config || echo "No config file found"
+
+          echo "===== OCI CLI Profile Used ====="
+          echo $OCI_CLI_PROFILE
+
 
