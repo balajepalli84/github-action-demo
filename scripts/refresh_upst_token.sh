@@ -48,6 +48,10 @@ refresh_token() {
   TOKEN=$(echo "$RESPONSE" | jq -r '.token' | tr -d '\n\r')
   echo -n "$TOKEN" > "$UPST_OUTPUT_PATH"
 
+  # DEBUG - Extract and log token fingerprint (first 10 chars of JWT for traceability)
+  TOKEN_HEAD=$(echo "$TOKEN" | cut -c1-10)
+  echo "UPST token refreshed at $(date): $TOKEN_HEAD"
+
 
   if [ -s "$UPST_OUTPUT_PATH" ]; then
     echo "UPST token refreshed successfully"
