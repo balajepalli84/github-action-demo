@@ -59,13 +59,13 @@ jobs:
           OCI_CLI_PROFILE: upst
       - name: Terraform Loop (simulate long-running process)
         run: |
-          for i in {1..5}; do
+          for i in {1..25}; do
             echo "Run $i at $(date)"
             echo -n "Current UPST token: "
             head -c 10 ~/.oci/upst.token
             echo ""
             terraform apply -auto-approve || true
-            sleep 15
+            sleep 120
           done
         working-directory: terraform/compute
         env:
