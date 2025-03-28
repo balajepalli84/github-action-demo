@@ -60,7 +60,7 @@ jobs:
             head -c 10 ~/.oci/upst.token || echo "Token not found"
             echo ""
             echo -n "JWT (first 10 chars): "
-            jq -r '.token' $GITHUB_WORKSPACE/id-token.json | head -c 10 || echo "JWT not found"
+            jq -r '.token' $GITHUB_WORKSPACE/.oci/id-token.json | head -c 10 || echo "JWT not found"
             echo ""
             terraform apply -auto-approve || true
             sleep 120
