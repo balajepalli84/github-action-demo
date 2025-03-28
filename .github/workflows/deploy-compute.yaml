@@ -28,8 +28,8 @@ jobs:
           ACTIONS_ID_TOKEN_REQUEST_URL: ${{ env.ACTIONS_ID_TOKEN_REQUEST_URL }}
       - name: Start Background Token Refresher
         run: |
-          chmod +x ./refresh_upst_token.sh
-          nohup ./refresh_upst_token.sh > upst_refresh.log 2>&1 &
+          chmod +x ./scripts/refresh_upst_token.sh
+          nohup ./scripts/refresh_upst_token.sh > upst_refresh.log 2>&1 &
         env:
           CLIENT_ID: ${{ env.CLIENT_ID }}
           CLIENT_SECRET: ${{ env.CLIENT_SECRET }}
