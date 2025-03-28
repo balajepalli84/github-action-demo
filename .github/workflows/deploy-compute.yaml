@@ -55,7 +55,14 @@ jobs:
         env:
           OCI_CLI_PROFILE: upst
           
-    
+      - name: Decode and Inspect UPST Token
+        run: |
+          echo "UPST token (truncated):"
+          head -c 100 ~/.oci/upst.token; echo
+      
+          echo "Decode token headers/payload:"
+          cat ~/.oci/upst.token | jq -R 'split(".") | .[0,1] | @base64d | fromjson'
+
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
 
