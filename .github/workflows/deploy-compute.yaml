@@ -67,12 +67,35 @@ jobs:
           for i in {1..25}; do
             echo "Run $i at $(date)"
 
-            echo -n "UPST token sess_exp: "
-            PAYLOAD=$(cut -d '.' -f2 ~/.oci/upst.token | base64 --decode 2>/dev/null)
-            echo "$PAYLOAD" | jq -r '.sess_exp // "sess_exp not found"'
+            TOKEN=$(cat ~/.oci/upst.token || echo "")
+            PAYLOAD_ENC=$(echo "$TOKEN" | cut -d '.' -f2)
+
+            if [ -n "$PAYLOAD_ENC" ]; then
+              # Add padding if missing
+              PADDING=$((4 - ${#PAYLOAD_ENC} % 4))
+              if [ $PADDING -ne 4 ]; then
+                PAYLOAD_ENC="${PAYLOAD_ENC}$(printf '=%.0s' $(seq 1 $PADDING))"
+              fi
+
+              PAYLOAD=$(echo "$PAYLOAD_ENC" | base64 -d 2>/dev/null || echo "")
+
+              if [ -n "$PAYLOAD" ]; then
+                SESS_EXP=$(echo "$PAYLOAD" | jq -r '.sess_exp // empty')
+                if [ -n "$SESS_EXP" ]; then
+                  echo "UPST token sess_exp: $SESS_EXP"
+                  echo "Readable expiry: $(date -u -d "@$SESS_EXP" '+%Y-%m-%d %H:%M:%S UTC')"
+                else
+                  echo "sess_exp not found in token."
+                fi
+              else
+                echo "Failed to decode JWT payload."
+              fi
+            else
+              echo "Invalid UPST token format."
+            fi
 
             terraform apply -auto-approve || true
-            sleep 10
+            sleep 120
           done
         working-directory: terraform/compute
         env:
