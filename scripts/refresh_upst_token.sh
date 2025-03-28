@@ -57,7 +57,7 @@ refresh_token() {
 }
 
 # Loop every 45 minutes
-while true; do
-  refresh_token
+while true; do  
   sleep 2700  # 45 minutes
+  refresh_token
 done
