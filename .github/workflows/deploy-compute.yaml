@@ -67,43 +67,29 @@ jobs:
           for i in {1..25}; do
             echo "Run $i at $(date)"
 
+            # Show UPST token expiry
             TOKEN=$(cat ~/.oci/upst.token || echo "")
             PAYLOAD_ENC=$(echo "$TOKEN" | cut -d '.' -f2)
-
             if [ -n "$PAYLOAD_ENC" ]; then
-              # Add padding if missing
               PADDING=$((4 - ${#PAYLOAD_ENC} % 4))
               if [ $PADDING -ne 4 ]; then
                 PAYLOAD_ENC="${PAYLOAD_ENC}$(printf '=%.0s' $(seq 1 $PADDING))"
               fi
-
               PAYLOAD=$(echo "$PAYLOAD_ENC" | base64 -d 2>/dev/null || echo "")
-
-              if [ -n "$PAYLOAD" ]; then
-                SESS_EXP=$(echo "$PAYLOAD" | jq -r '.sess_exp // empty')
-                if [ -n "$SESS_EXP" ]; then
-                  echo "UPST token sess_exp: $SESS_EXP"
-                  echo "Readable expiry: $(date -u -d "@$SESS_EXP" '+%Y-%m-%d %H:%M:%S UTC')"
-                else
-                  echo "sess_exp not found in token."
-                fi
-              else
-                echo "Failed to decode JWT payload."
+              SESS_EXP=$(echo "$PAYLOAD" | jq -r '.sess_exp // empty')
+              if [ -n "$SESS_EXP" ]; then
+                echo "UPST token sess_exp: $SESS_EXP"
+                echo "Readable expiry: $(date -u -d "@$SESS_EXP" '+%Y-%m-%d %H:%M:%S UTC')"
               fi
-            else
-              echo "Invalid UPST token format."
             fi
 
+            # Show refresher logs for visibility
+            echo "==== UPST Refresh Log (last 5 lines) ===="
+            tail -n 5 $GITHUB_WORKSPACE/upst_refresh.log || echo "Log not found"
+
             terraform apply -auto-approve || true
-            sleep 120
+            sleep 30
           done
         working-directory: terraform/compute
         env:
           OCI_CLI_PROFILE: upst
-
-
-
-
-
-
-
