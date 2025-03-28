@@ -52,6 +52,8 @@ jobs:
       - name: Terraform Init
         run: terraform init
         working-directory: terraform/compute
+        env:
+          OCI_CLI_PROFILE: upst
 
       - name: Terraform Plan
         run: terraform plan
