@@ -69,5 +69,5 @@ while true; do
     echo "Token refreshed: head=$TOKEN_HEAD, exp=$EXP_HUMAN" >> "$LOG_FILE"
   fi
 
-  sleep 360  # Refresh interval (short for testing)
+  sleep 5  # Refresh interval (short for testing)
 done
