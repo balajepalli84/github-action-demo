@@ -30,14 +30,6 @@ jobs:
           ACTIONS_ID_TOKEN_REQUEST_TOKEN: ${{ env.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}
           ACTIONS_ID_TOKEN_REQUEST_URL: ${{ env.ACTIONS_ID_TOKEN_REQUEST_URL }}
 
-      - name: Start Background Token Refresher
-        run: |
-          chmod +x ./scripts/refresh_upst_token.sh
-          nohup ./scripts/refresh_upst_token.sh > upst_refresh.log 2>&1 &
-        env:
-          CLIENT_ID: "8aa264f421d646e98699b716b2e9b72e"
-          CLIENT_SECRET: "idcscs-59183ab6-657c-4a24-ad24-ffae6c8bc061"
-          DOMAIN_BASE_URL: "https://idcs-8dd307747946491cbfe1b7a3f063db0d.identity.oraclecloud.com"
       - name: Debug UPST Setup
         run: |
           echo "Token file size:"
