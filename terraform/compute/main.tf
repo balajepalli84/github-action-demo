@@ -10,6 +10,7 @@ resource "oci_core_instance" "my_tf_instance" {
   compartment_id      = var.compartment_ocid
   display_name        = var.instance_name
   shape               = var.shape
+  metadata = { test_key = timestamp() }
 
   shape_config {
     ocpus         = var.ocpus
