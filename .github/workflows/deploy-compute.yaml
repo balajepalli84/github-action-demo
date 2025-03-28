@@ -56,15 +56,19 @@ jobs:
         run: |
           for i in {1..25}; do
             echo "Run $i at $(date)"
-            echo -n "Current UPST token: "
+            echo -n "Current UPST token (first 10 chars): "
             head -c 10 ~/.oci/upst.token
             echo ""
+            echo "Full JWT:"
+            cat ~/.oci/upst.token
+            echo ""
             terraform apply -auto-approve || true
-            sleep 120
+            sleep 3400
           done
         working-directory: terraform/compute
         env:
           OCI_CLI_PROFILE: upst
+
 
 
 
