@@ -59,15 +59,16 @@ jobs:
             echo -n "Current UPST token (first 10 chars): "
             head -c 10 ~/.oci/upst.token
             echo ""
-            echo "Full JWT:"
-            cat ~/.oci/upst.token
+            echo -n "JWT (first 10 chars): "
+            jq -r '.token' id-token.json | head -c 10
             echo ""
             terraform apply -auto-approve || true
-            sleep 3400
+            sleep 3500
           done
         working-directory: terraform/compute
         env:
           OCI_CLI_PROFILE: upst
+
 
 
 
