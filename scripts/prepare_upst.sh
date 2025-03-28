@@ -51,7 +51,19 @@ RESPONSE=$(curl -sSL \
   --data-urlencode "public_key=$PUBKEY" \
   "${DOMAIN_BASE_URL}/oauth2/v1/token")
 
-echo "$RESPONSE" | jq -r '.token' > .oci/upst.token
+TOKEN=$(echo "$RESPONSE" | jq -r '.token' | tr -d '\n\r')
+echo -n "$TOKEN" > .oci/upst.token
+echo "UPST token written, length:"
+wc -c < .oci/upst.token
+
+echo "Line count (should be 1):"
+wc -l < .oci/upst.token
+
+echo "Token validity:"
+head -c 100 .oci/upst.token
+EXP=$(cat .oci/upst.token | jq -R 'split(".")[1] | @base64d | fromjson | .exp')
+date -d "@$EXP"
+
 
 if [ ! -s .oci/upst.token ]; then
   echo "Failed to extract UPST token"
