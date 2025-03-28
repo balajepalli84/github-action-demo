@@ -110,5 +110,15 @@ jobs:
 
           echo "===== OCI CLI Profile Used ====="
           echo $OCI_CLI_PROFILE
+      - name: Check Private Key
+        run: |
+          echo "Private key file:"
+          cat ~/.oci/temp_private.pem | head -n 5
+      
+          echo "File permissions:"
+          ls -l ~/.oci/temp_private.pem
+      
+          echo "Is valid key:"
+          openssl rsa -in ~/.oci/temp_private.pem -check -noout
 
 
