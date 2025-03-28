@@ -45,6 +45,16 @@ jobs:
 
           echo "Key file:"
           head -n 5 ~/.oci/temp_private.pem
+      - name: Check OCI_CLI_PROFILE
+        run: |
+          echo "OCI_CLI_PROFILE=$OCI_CLI_PROFILE"
+          if [ -z "$OCI_CLI_PROFILE" ]; then
+            echo "ERROR: OCI_CLI_PROFILE is not set"
+            exit 1
+          fi
+        env:
+          OCI_CLI_PROFILE: upst
+          
     
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
