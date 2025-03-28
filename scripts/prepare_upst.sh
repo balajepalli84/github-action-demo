@@ -52,7 +52,7 @@ RESPONSE=$(curl -sSL \
   "${DOMAIN_BASE_URL}/oauth2/v1/token")
 
 TOKEN=$(echo "$RESPONSE" | jq -r '.token' | tr -d '\n\r')
-
+echo -n "$TOKEN" > .oci/upst.token
 
 if [ ! -s .oci/upst.token ]; then
   echo "Failed to extract UPST token"
