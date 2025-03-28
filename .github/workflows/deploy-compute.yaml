@@ -52,11 +52,6 @@ jobs:
         env:
           OCI_CLI_PROFILE: upst
 
-      - name: Terraform Apply
-        run: terraform apply -auto-approve
-        working-directory: terraform/compute
-        env:
-          OCI_CLI_PROFILE: upst
       - name: Terraform Loop (simulate long-running process)
         run: |
           for i in {1..25}; do
