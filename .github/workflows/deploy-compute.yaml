@@ -66,18 +66,18 @@ jobs:
         run: |
           for i in {1..25}; do
             echo "Run $i at $(date)"
-            echo -n "Current UPST token (first 10 chars): "
-            head -c 10 ~/.oci/upst.token || echo "Token not found"
-            echo ""
-            echo -n "JWT (first 10 chars): "
-            jq -r '.value' $GITHUB_WORKSPACE/.oci/id-token.json | head -c 10 || echo "JWT not found"
-            echo ""
+
+            echo -n "UPST token sess_exp: "
+            PAYLOAD=$(cut -d '.' -f2 ~/.oci/upst.token | base64 --decode 2>/dev/null)
+            echo "$PAYLOAD" | jq -r '.sess_exp // "sess_exp not found"'
+
             terraform apply -auto-approve || true
-            sleep 120
+            sleep 10
           done
         working-directory: terraform/compute
         env:
           OCI_CLI_PROFILE: upst
+
 
 
 
