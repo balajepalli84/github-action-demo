@@ -5,36 +5,45 @@ set -euo pipefail
 CLIENT_ID="${CLIENT_ID:-}"
 CLIENT_SECRET="${CLIENT_SECRET:-}"
 DOMAIN_BASE_URL="${DOMAIN_BASE_URL:-}"
+ACTIONS_ID_TOKEN_REQUEST_TOKEN="${ACTIONS_ID_TOKEN_REQUEST_TOKEN:-}"
+ACTIONS_ID_TOKEN_REQUEST_URL="${ACTIONS_ID_TOKEN_REQUEST_URL:-}"
+AUDIENCE="${AUDIENCE:-$CLIENT_ID}"
 
-# Input paths
-JWT_FILE="${JWT_FILE:-.oci/id-token.json}"
-PUBLIC_KEY_PATH="${PUBLIC_KEY_PATH:-.oci/temp_public.pem}"
-UPST_OUTPUT_PATH="${UPST_OUTPUT_PATH:-.oci/upst.token}"
+# File paths
+JWT_FILE=".oci/id-token.json"
+PUBLIC_KEY_PATH=".oci/temp_public.pem"
+UPST_OUTPUT_PATH="$HOME/.oci/upst.token"
+LOG_FILE=".oci/token-refresh.log"
+
+mkdir -p .oci
 
 # Validate required files
-if [ ! -f "$JWT_FILE" ]; then
-  echo "Missing JWT file at $JWT_FILE"
-  exit 1
-fi
-
 if [ ! -f "$PUBLIC_KEY_PATH" ]; then
-  echo "Missing public key file at $PUBLIC_KEY_PATH"
+  echo "Missing public key file: $PUBLIC_KEY_PATH"
   exit 1
 fi
 
-refresh_token() {
-  echo "Refreshing UPST token at $(date)"
+echo "Starting UPST token refresher every 10 seconds..."
+
+while true; do
+  echo "Refreshing UPST at $(date)" >> "$LOG_FILE"
+
+  # Step 1: Get a fresh GitHub OIDC token
+  curl -sSL -H "Authorization: Bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" \
+    "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=${AUDIENCE}" > "$JWT_FILE"
 
   JWT=$(jq -r '.value' "$JWT_FILE")
   if [ -z "$JWT" ]; then
     echo "Failed to extract JWT from $JWT_FILE"
-    return 1
+    sleep 10
+    continue
   fi
 
+  # Step 2: Prepare public key (strip headers)
   PUBKEY=$(awk '/BEGIN PUBLIC KEY/ {skip=1; next} /END PUBLIC KEY/ {skip=0; next} skip {printf "%s", $0;}' "$PUBLIC_KEY_PATH")
-
   AUTH_HEADER=$(printf "%s" "${CLIENT_ID}:${CLIENT_SECRET}" | base64 | tr -d '\n')
 
+  # Step 3: Exchange for UPST token
   RESPONSE=$(curl -sSL \
     --header "Content-Type: application/x-www-form-urlencoded" \
     --header "Authorization: Basic $AUTH_HEADER" \
@@ -46,24 +55,19 @@ refresh_token() {
     "${DOMAIN_BASE_URL}/oauth2/v1/token")
 
   TOKEN=$(echo "$RESPONSE" | jq -r '.token' | tr -d '\n\r')
-  echo -n "$TOKEN" > "$UPST_OUTPUT_PATH"
 
-  # DEBUG - Extract and log token fingerprint (first 10 chars of JWT for traceability)
-  TOKEN_HEAD=$(echo "$TOKEN" | cut -c1-10)
-  echo "UPST token refreshed at $(date): $TOKEN_HEAD"
-
-
-  if [ -s "$UPST_OUTPUT_PATH" ]; then
-    echo "UPST token refreshed successfully"
-    return 0
+  if [[ -z "$TOKEN" ]]; then
+    echo "Failed to extract UPST token" >> "$LOG_FILE"
   else
-    echo "Failed to refresh UPST token"
-    return 1
-  fi
-}
+    echo -n "$TOKEN" > "$UPST_OUTPUT_PATH"
+    chmod 600 "$UPST_OUTPUT_PATH"
 
-# Loop every 45 minutes
-while true; do  
-  sleep 10  # 2700 - 45 minutes
-  refresh_token
+    TOKEN_HEAD=$(echo "$TOKEN" | cut -c1-10)
+    EXP=$(echo "$TOKEN" | jq -R 'split(".")[1] | @base64d | fromjson | .exp')
+    EXP_HUMAN=$(date -d "@$EXP")
+
+    echo "Token refreshed: head=$TOKEN_HEAD, exp=$EXP_HUMAN" >> "$LOG_FILE"
+  fi
+
+  sleep 10  # Refresh interval (short for testing)
 done
