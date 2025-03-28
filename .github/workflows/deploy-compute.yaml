@@ -10,6 +10,8 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      OCI_CLI_PROFILE: upst
 
     steps:
       - name: Checkout Repo
