@@ -45,7 +45,9 @@ refresh_token() {
     --data-urlencode "public_key=$PUBKEY" \
     "${DOMAIN_BASE_URL}/oauth2/v1/token")
 
-  echo "$RESPONSE" | jq -r '.token' > "$UPST_OUTPUT_PATH"
+  TOKEN=$(echo "$RESPONSE" | jq -r '.token' | tr -d '\n\r')
+  echo -n "$TOKEN" > "$UPST_OUTPUT_PATH"
+
 
   if [ -s "$UPST_OUTPUT_PATH" ]; then
     echo "UPST token refreshed successfully"
