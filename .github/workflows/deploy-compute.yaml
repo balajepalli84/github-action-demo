@@ -10,9 +10,6 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    env:
-      OCI_CLI_PROFILE: upst
-
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
@@ -29,53 +26,17 @@ jobs:
           OCI_REGION: ${{ vars.OCI_REGION }}
           ACTIONS_ID_TOKEN_REQUEST_TOKEN: ${{ env.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}
           ACTIONS_ID_TOKEN_REQUEST_URL: ${{ env.ACTIONS_ID_TOKEN_REQUEST_URL }}
-
-      - name: Debug UPST Setup
+      - name: Start Background Token Refresher
         run: |
-          echo "Token file size:"
-          wc -c < ~/.oci/upst.token
-          echo "Token contents (truncated):"
-          head -c 100 ~/.oci/upst.token; echo
-
-          echo "Config file:"
-          cat ~/.oci/config
-
-          echo "OCI_CLI_PROFILE env:"
-          echo $OCI_CLI_PROFILE
-
-          echo "Key file:"
-          head -n 5 ~/.oci/temp_private.pem
-      - name: Check OCI_CLI_PROFILE
-        run: |
-          echo "OCI_CLI_PROFILE=$OCI_CLI_PROFILE"
-          if [ -z "$OCI_CLI_PROFILE" ]; then
-            echo "ERROR: OCI_CLI_PROFILE is not set"
-            exit 1
-          fi
+          chmod +x ./refresh_upst_token.sh
+          nohup ./refresh_upst_token.sh > upst_refresh.log 2>&1 &
         env:
-          OCI_CLI_PROFILE: upst
-          
-      - name: Decode and Inspect UPST Token
-        run: |
-          echo "UPST token (truncated):"
-          head -c 100 ~/.oci/upst.token; echo
-      
-          echo "Decode token headers/payload:"
-          cat ~/.oci/upst.token | jq -R 'split(".") | .[0,1] | @base64d | fromjson'
+          CLIENT_ID: ${{ env.CLIENT_ID }}
+          CLIENT_SECRET: ${{ env.CLIENT_SECRET }}
+          DOMAIN_BASE_URL: ${{ env.DOMAIN_BASE_URL }}
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
-      - name: Check Private Key
-        run: |
-          echo "Private key file:"
-          cat ~/.oci/temp_private.pem | head -n 5
-      
-          echo "File permissions:"
-          ls -l ~/.oci/temp_private.pem
-      
-          echo "Is valid key:"
-          openssl rsa -in ~/.oci/temp_private.pem -check -noout
-
 
       - name: Terraform Init
         run: terraform init
@@ -94,32 +55,4 @@ jobs:
         working-directory: terraform/compute
         env:
           OCI_CLI_PROFILE: upst
-      - name: Upload UPST Token and Config Files
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: oci-upst-files
-          path: |
-            .oci/temp_private.pem
-            .oci/temp_public.pem
-            .oci/id-token.json
-            .oci/upst.token
-            $HOME/.oci/config
-      - name: Debug Token and Config Files
-        run: |
-          echo "===== .oci/upst.token (length) ====="
-          wc -c < .oci/upst.token || true
-
-          echo "===== .oci/id-token.json ====="
-          jq '.' .oci/id-token.json || cat .oci/id-token.json
-
-          echo "===== .oci/temp_private.pem (first 5 lines) ====="
-          head -n 5 .oci/temp_private.pem || true
-
-          echo "===== ~/.oci/config ====="
-          cat $HOME/.oci/config || echo "No config file found"
-
-          echo "===== OCI CLI Profile Used ====="
-          echo $OCI_CLI_PROFILE
-
 
