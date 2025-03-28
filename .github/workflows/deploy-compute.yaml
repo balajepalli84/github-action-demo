@@ -36,23 +36,22 @@ jobs:
           CLIENT_ID: "8aa264f421d646e98699b716b2e9b72e"
           CLIENT_SECRET: "idcscs-59183ab6-657c-4a24-ad24-ffae6c8bc061"
           DOMAIN_BASE_URL: "https://idcs-8dd307747946491cbfe1b7a3f063db0d.identity.oraclecloud.com"
-      - name: Debug Token and Config Files
+      - name: Debug UPST Setup
         run: |
-          echo "===== .oci/upst.token (length) ====="
-          wc -c < .oci/upst.token || true
+          echo "Token file size:"
+          wc -c < ~/.oci/upst.token
+          echo "Token contents (truncated):"
+          head -c 100 ~/.oci/upst.token; echo
 
-          echo "===== .oci/id-token.json ====="
-          jq '.' .oci/id-token.json || cat .oci/id-token.json
+          echo "Config file:"
+          cat ~/.oci/config
 
-          echo "===== .oci/temp_private.pem (first 5 lines) ====="
-          head -n 5 .oci/temp_private.pem || true
-
-          echo "===== ~/.oci/config ====="
-          cat $HOME/.oci/config || echo "No config file found"
-
-          echo "===== OCI CLI Profile Used ====="
+          echo "OCI_CLI_PROFILE env:"
           echo $OCI_CLI_PROFILE
 
+          echo "Key file:"
+          head -n 5 ~/.oci/temp_private.pem
+    
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
 
