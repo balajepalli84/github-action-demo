@@ -36,6 +36,16 @@ jobs:
           DOMAIN_BASE_URL: ${{ secrets.DOMAIN_BASE_URL }}
           ACTIONS_ID_TOKEN_REQUEST_TOKEN: ${{ env.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}
           ACTIONS_ID_TOKEN_REQUEST_URL: ${{ env.ACTIONS_ID_TOKEN_REQUEST_URL }}
+      - name: Upload Token Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: upst-token-files
+          path: |
+            .oci/id-token.json
+            .oci/upst.token
+            .oci/temp_private.pem
+            .oci/temp_public.pem
+          
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
