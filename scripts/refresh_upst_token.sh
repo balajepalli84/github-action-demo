@@ -12,9 +12,11 @@ AUDIENCE="${AUDIENCE:-$CLIENT_ID}"
 # File paths
 JWT_FILE=".oci/id-token.json"
 PUBLIC_KEY_PATH=".oci/temp_public.pem"
-UPST_OUTPUT_PATH="$HOME/.oci/upst.token"
+UPST_LATEST="$HOME/.oci/upst.token"
+TOKEN_DIR="$GITHUB_WORKSPACE/.oci/tokens"
 LOG_FILE="$GITHUB_WORKSPACE/upst_refresh.log"
-mkdir -p .oci
+
+mkdir -p .oci "$TOKEN_DIR"
 
 # Validate public key presence
 if [ ! -f "$PUBLIC_KEY_PATH" ]; then
@@ -23,7 +25,6 @@ if [ ! -f "$PUBLIC_KEY_PATH" ]; then
 fi
 
 echo "Starting UPST token refresher loop..." | tee -a "$LOG_FILE"
-echo "Using ID token request URL: $ACTIONS_ID_TOKEN_REQUEST_URL" >> "$LOG_FILE"
 
 while true; do
   echo "Refreshing UPST at $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> "$LOG_FILE"
@@ -40,17 +41,8 @@ while true; do
   PUBKEY=$(awk '/BEGIN PUBLIC KEY/ {skip=1; next} /END PUBLIC KEY/ {skip=0; next} skip {printf "%s", $0;}' "$PUBLIC_KEY_PATH")
   AUTH_HEADER=$(printf "%s" "${CLIENT_ID}:${CLIENT_SECRET}" | base64 | tr -d '\n')
 
-  # Debug log of token exchange inputs
-  echo "🔍 Debugging token exchange inputs:" >> "$LOG_FILE"
-  echo "CLIENT_ID: $CLIENT_ID" >> "$LOG_FILE"
-  echo "CLIENT_SECRET: [REDACTED]" >> "$LOG_FILE"
-  echo "AUTH_HEADER: $AUTH_HEADER" >> "$LOG_FILE"
-  echo "DOMAIN_BASE_URL: $DOMAIN_BASE_URL" >> "$LOG_FILE"
-  echo "JWT (first 10 chars): ${JWT:0:10}" >> "$LOG_FILE"
-  echo "PUBKEY (first 10 chars): ${PUBKEY:0:10}" >> "$LOG_FILE"
-  echo "Token exchange URL: ${DOMAIN_BASE_URL}/oauth2/v1/token" >> "$LOG_FILE"
+  echo "🔍 Token exchange request to ${DOMAIN_BASE_URL}/oauth2/v1/token" >> "$LOG_FILE"
 
-  # Token exchange
   RESPONSE=$(curl -sSL \
     --header "Content-Type: application/x-www-form-urlencoded" \
     --header "Authorization: Basic $AUTH_HEADER" \
@@ -68,37 +60,36 @@ while true; do
     continue
   fi
 
-  echo -n "$TOKEN" > "$UPST_OUTPUT_PATH"
-  chmod 600 "$UPST_OUTPUT_PATH"
+  echo -n "$TOKEN" > "$UPST_LATEST"
+  chmod 600 "$UPST_LATEST"
 
-  # Decode token payload
+  # Save snapshot
+  SNAP_FILE="$TOKEN_DIR/upst_$(date -u +'%Y%m%dT%H%M%SZ').token"
+  echo -n "$TOKEN" > "$SNAP_FILE"
+
+  # Decode token payload for exp/sess_exp
   PAYLOAD_ENC=$(echo "$TOKEN" | cut -d '.' -f2)
-  if [ -n "$PAYLOAD_ENC" ]; then
-    # Convert from base64url to base64
-    PAYLOAD_ENC=$(echo "$PAYLOAD_ENC" | tr '_-' '/+')
-    PADDING=$((4 - ${#PAYLOAD_ENC} % 4))
-    if [ $PADDING -ne 4 ]; then
-      PAYLOAD_ENC="${PAYLOAD_ENC}$(printf '=%.0s' $(seq 1 $PADDING))"
-    fi
-
-    PAYLOAD=$(echo "$PAYLOAD_ENC" | base64 -d 2>/dev/null || echo "")
-    EXP=$(echo "$PAYLOAD" | jq -r '.exp // empty')
-    SESS_EXP=$(echo "$PAYLOAD" | jq -r '.sess_exp // empty')
-
-    if [[ "$EXP" =~ ^[0-9]+$ ]]; then
-      EXP_HUMAN=$(date -u -d "@$EXP" +'%Y-%m-%d %H:%M:%S UTC')
-      echo "✅ Token exp:      $EXP_HUMAN" >> "$LOG_FILE"
-    fi
-
-    if [[ "$SESS_EXP" =~ ^[0-9]+$ ]]; then
-      SESS_HUMAN=$(date -u -d "@$SESS_EXP" +'%Y-%m-%d %H:%M:%S UTC')
-      echo "✅ Token sess_exp: $SESS_HUMAN" >> "$LOG_FILE"
-    else
-      echo "⚠️  sess_exp not found in token." >> "$LOG_FILE"
-    fi
-  else
-    echo "⚠️  Failed to parse token payload." >> "$LOG_FILE"
+  PAYLOAD_ENC=$(echo "$PAYLOAD_ENC" | tr '_-' '/+')
+  PADDING=$((4 - ${#PAYLOAD_ENC} % 4))
+  if [ $PADDING -ne 4 ]; then
+    PAYLOAD_ENC="${PAYLOAD_ENC}$(printf '=%.0s' $(seq 1 $PADDING))"
   fi
 
-  sleep 240  # Refresh every 4 minutes
+  PAYLOAD=$(echo "$PAYLOAD_ENC" | base64 -d 2>/dev/null || echo "")
+  EXP=$(echo "$PAYLOAD" | jq -r '.exp // empty')
+  SESS_EXP=$(echo "$PAYLOAD" | jq -r '.sess_exp // empty')
+
+  if [[ "$EXP" =~ ^[0-9]+$ ]]; then
+    EXP_HUMAN=$(date -u -d "@$EXP" +'%Y-%m-%d %H:%M:%S UTC')
+    echo "✅ Token exp:      $EXP_HUMAN" >> "$LOG_FILE"
+  fi
+
+  if [[ "$SESS_EXP" =~ ^[0-9]+$ ]]; then
+    SESS_HUMAN=$(date -u -d "@$SESS_EXP" +'%Y-%m-%d %H:%M:%S UTC')
+    echo "✅ Token sess_exp: $SESS_HUMAN" >> "$LOG_FILE"
+  else
+    echo "⚠️  sess_exp not found in token." >> "$LOG_FILE"
+  fi
+
+  sleep 240
 done
