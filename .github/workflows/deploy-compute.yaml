@@ -81,7 +81,7 @@ jobs:
             tail -n 5 $GITHUB_WORKSPACE/upst_refresh.log || echo "Log not found"
 
             terraform apply -auto-approve || true
-            sleep 30
+            sleep 40
           done
         working-directory: terraform/compute
         env:
