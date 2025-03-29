@@ -64,6 +64,7 @@ jobs:
             TOKEN=$(cat ~/.oci/upst.token || echo "")
             PAYLOAD_ENC=$(echo "$TOKEN" | cut -d '.' -f2)
             if [ -n "$PAYLOAD_ENC" ]; then
+              PAYLOAD_ENC=$(echo "$PAYLOAD_ENC" | tr '_-' '/+')
               PADDING=$((4 - ${#PAYLOAD_ENC} % 4))
               if [ $PADDING -ne 4 ]; then
                 PAYLOAD_ENC="${PAYLOAD_ENC}$(printf '=%.0s' $(seq 1 $PADDING))"
@@ -85,3 +86,17 @@ jobs:
         working-directory: terraform/compute
         env:
           OCI_CLI_PROFILE: upst
+
+      - name: Upload UPST Tokens
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: upst-token-snapshots
+          path: .oci/tokens/*.token
+
+      - name: Upload UPST Refresh Log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: upst-refresh-log
+          path: upst_refresh.log
