@@ -97,5 +97,5 @@ while true; do
     echo "⚠️  sess_exp not found in token." >> "$LOG_FILE"
   fi
 
-  sleep 240
+  sleep 30
 done
