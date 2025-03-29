@@ -41,9 +41,9 @@ jobs:
           chmod +x ./scripts/refresh_upst_token.sh
           nohup ./scripts/refresh_upst_token.sh > upst_refresh.log 2>&1 &
         env:
-          CLIENT_ID: ${{ secrets.CLIENT_ID }}
-          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
-          DOMAIN_BASE_URL: ${{ secrets.DOMAIN_BASE_URL }}
+          CLIENT_ID: "8aa264f421d646e98699b716b2e9b72e"
+          CLIENT_SECRET: "idcscs-59183ab6-657c-4a24-ad24-ffae6c8bc061"
+          DOMAIN_BASE_URL: "https://idcs-8dd307747946491cbfe1b7a3f063db0d.identity.oraclecloud.com"
           ACTIONS_ID_TOKEN_REQUEST_TOKEN: ${{ steps.id_token.outputs.token }}
           ACTIONS_ID_TOKEN_REQUEST_URL: https://token.actions.githubusercontent.com
 
