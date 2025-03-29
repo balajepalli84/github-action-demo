@@ -56,6 +56,14 @@ fi
   # Extract base64-encoded public key
   PUBKEY=$(awk '/BEGIN PUBLIC KEY/ {skip=1; next} /END PUBLIC KEY/ {skip=0; next} skip {printf "%s", $0;}' "$PUBLIC_KEY_PATH")
   AUTH_HEADER=$(printf "%s" "${CLIENT_ID}:${CLIENT_SECRET}" | base64 | tr -d '\n')
+  echo "🔍 Debugging token exchange inputs:" >> "$LOG_FILE"
+  echo "CLIENT_ID: $CLIENT_ID" >> "$LOG_FILE"
+  echo "CLIENT_SECRET: [REDACTED]" >> "$LOG_FILE"
+  echo "AUTH_HEADER: $AUTH_HEADER" >> "$LOG_FILE"
+  echo "DOMAIN_BASE_URL: $DOMAIN_BASE_URL" >> "$LOG_FILE"
+  echo "JWT (first 10 chars): ${JWT:0:10}" >> "$LOG_FILE"
+  echo "PUBKEY (first 10 chars): ${PUBKEY:0:10}" >> "$LOG_FILE"
+  echo "Token exchange URL: ${DOMAIN_BASE_URL}/oauth2/v1/token" >> "$LOG_FILE"
 
   # Exchange for UPST token
   RESPONSE=$(curl -sSL \
