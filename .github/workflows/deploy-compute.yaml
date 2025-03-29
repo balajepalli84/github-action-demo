@@ -86,6 +86,23 @@ jobs:
         working-directory: terraform/compute
         env:
           OCI_CLI_PROFILE: upst
+      - name: List saved UPST tokens
+        run: ls -l .oci/tokens || echo "No token files found"
+
+      - name: Upload UPST Tokens
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: upst-token-snapshots
+          path: .oci/tokens/*.token
+
+      - name: Upload UPST Refresh Log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: upst-refresh-log
+          path: upst_refresh.log
+
 
       - name: Upload UPST Tokens
         if: always()
