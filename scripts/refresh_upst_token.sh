@@ -29,8 +29,8 @@ while true; do
   echo "Refreshing UPST at $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> "$LOG_FILE"
   
 # Load original GitHub OIDC JWT (from prepare_upst.sh)
-JWT_FILE=".oci/github_oidc.jwt"
-JWT=$(cat "$JWT_FILE" 2>/dev/null || echo "")
+JWT=$(jq -r '.value' .oci/id-token.json)
+
 
 if [ -z "$JWT" ]; then
   echo "❌ Failed to load GitHub OIDC JWT from $JWT_FILE" >> "$LOG_FILE"
