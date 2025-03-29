@@ -66,6 +66,12 @@ while true; do
   # Save snapshot
   SNAP_FILE="$TOKEN_DIR/upst_$(date -u +'%Y%m%dT%H%M%SZ').token"
   echo -n "$TOKEN" > "$SNAP_FILE"
+  # Save snapshot in timestamped file
+  TOKEN_TIMESTAMP=$(date -u +'%Y%m%dT%H%M%SZ')
+  SNAP_PATH="$GITHUB_WORKSPACE/.oci/tokens/upst_$TOKEN_TIMESTAMP.token"
+  echo -n "$TOKEN" > "$SNAP_PATH"
+  chmod 600 "$SNAP_PATH"
+  echo "📝 Saved UPST token to: $SNAP_PATH" >> "$LOG_FILE"
 
   # Decode token payload for exp/sess_exp
   PAYLOAD_ENC=$(echo "$TOKEN" | cut -d '.' -f2)
