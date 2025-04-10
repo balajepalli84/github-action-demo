@@ -1,4 +1,4 @@
-name: Deploy Compute with GitHub OIDC to OCI UPST
+name: Download GitHub OIDC JWT
 
 on:
   workflow_dispatch:
@@ -8,112 +8,19 @@ permissions:
   contents: read
 
 jobs:
-  deploy:
+  get-jwt:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v4
-
-      - name: Request GitHub OIDC Token
-        id: id_token
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const token = await core.getIDToken();
-            core.setOutput('token', token);
-
-      - name: Prepare UPST Token
+      - name: Request GitHub OIDC token and save to file
         run: |
-          chmod +x ./scripts/prepare_upst.sh
-          ./scripts/prepare_upst.sh
-        env:
-          CLIENT_ID: "8aa264f421d646e98699b716b2e9b72e"
-          CLIENT_SECRET: "idcscs-59183ab6-657c-4a24-ad24-ffae6c8bc061"
-          DOMAIN_BASE_URL: "https://idcs-8dd307747946491cbfe1b7a3f063db0d.identity.oraclecloud.com"
-          OCI_TENANCY: ${{ vars.OCI_TENANCY }}
-          OCI_REGION: ${{ vars.OCI_REGION }}
-          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ${{ steps.id_token.outputs.token }}
-          ACTIONS_ID_TOKEN_REQUEST_URL: https://token.actions.githubusercontent.com
+          TOKEN=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=github-actions" \
+            | jq -r .value)
 
-      - name: Start Background Token Refresher
-        run: |
-          chmod +x ./scripts/refresh_upst_token.sh
-          nohup ./scripts/refresh_upst_token.sh > upst_refresh.log 2>&1 &
-        env:
-          CLIENT_ID: "8aa264f421d646e98699b716b2e9b72e"
-          CLIENT_SECRET: "idcscs-59183ab6-657c-4a24-ad24-ffae6c8bc061"
-          DOMAIN_BASE_URL: "https://idcs-8dd307747946491cbfe1b7a3f063db0d.identity.oraclecloud.com"
-          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ${{ steps.id_token.outputs.token }}
-          ACTIONS_ID_TOKEN_REQUEST_URL: https://token.actions.githubusercontent.com
+          echo "$TOKEN" > jwt_token.txt
 
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v3
-
-      - name: Terraform Init
-        run: terraform init
-        working-directory: terraform/compute
-        env:
-          OCI_CLI_PROFILE: upst
-
-      - name: Terraform Loop (simulate long-running process)
-        run: |
-          for i in {1..25}; do
-            echo "Run $i at $(date)"
-
-            TOKEN=$(cat ~/.oci/upst.token || echo "")
-            PAYLOAD_ENC=$(echo "$TOKEN" | cut -d '.' -f2)
-            if [ -n "$PAYLOAD_ENC" ]; then
-              PAYLOAD_ENC=$(echo "$PAYLOAD_ENC" | tr '_-' '/+')
-              PADDING=$((4 - ${#PAYLOAD_ENC} % 4))
-              if [ $PADDING -ne 4 ]; then
-                PAYLOAD_ENC="${PAYLOAD_ENC}$(printf '=%.0s' $(seq 1 $PADDING))"
-              fi
-              PAYLOAD=$(echo "$PAYLOAD_ENC" | base64 -d 2>/dev/null || echo "")
-              SESS_EXP=$(echo "$PAYLOAD" | jq -r '.sess_exp // empty')
-              if [ -n "$SESS_EXP" ]; then
-                echo "UPST token sess_exp: $SESS_EXP"
-                echo "Readable expiry: $(date -u -d "@$SESS_EXP" '+%Y-%m-%d %H:%M:%S UTC')"
-              fi
-            fi
-
-            echo "==== UPST Refresh Log (last 5 lines) ===="
-            tail -n 5 $GITHUB_WORKSPACE/upst_refresh.log || echo "Log not found"
-
-            terraform apply -auto-approve || true
-            sleep 40
-          done
-        working-directory: terraform/compute
-        env:
-          OCI_CLI_PROFILE: upst
-      - name: List saved UPST tokens
-        run: ls -l .oci/tokens || echo "No token files found"
-
-      - name: Upload UPST Tokens
-        if: always()
+      - name: Upload JWT as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: upst-token-snapshots
-          path: .oci/tokens/*.token
-
-      - name: Upload UPST Refresh Log
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: upst-refresh-log
-          path: upst_refresh.log
-
-
-      - name: Upload UPST Tokens
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: upst-token-snapshots
-          path: .oci/tokens/*.token
-
-      - name: Upload UPST Refresh Log
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: upst-refresh-log
-          path: upst_refresh.log
+          name: jwt-token
+          path: jwt_token.txt
