@@ -1,4 +1,4 @@
-name: Get GitHub OIDC JWT
+name: Token Exchange Test - Get_JWT_from PY 
 
 on:
   workflow_dispatch:
@@ -23,11 +23,13 @@ jobs:
         run: pip install requests
 
       - name: List files in workspace
-        run: |
-          echo "Listing files in workspace:"
-          ls -la
-          echo "Listing files in .github/workflows:"
-          ls -la .github/workflows
+        run: ls -la
 
       - name: Run get_jwt.py
         run: python get_jwt.py
+
+      - name: Upload JWT as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: oidc-jwt
+          path: oidc_jwt.txt
