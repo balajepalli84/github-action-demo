@@ -3,7 +3,6 @@ import oci
 import base64
 
 print("Starting test with TokenExchangeSigner...")
-
 # Read JWT token
 jwt_path = ".oci/id-token.jwt"
 if not os.path.exists(jwt_path):
@@ -11,10 +10,15 @@ if not os.path.exists(jwt_path):
     exit(1)
 
 OCI_JWT = open(jwt_path).read().strip()
+
+# 🔐 PRINT JWT — be aware this exposes the token in logs
+print(f" OCI_JWT Token   = {OCI_JWT}")
+
 OCI_DOMAIN_ID = os.environ["OCI_DOMAIN_ID"]
 OCI_CLIENT_ID = os.environ["OCI_CLIENT_ID"]
 OCI_CLIENT_SECRET = os.environ["OCI_CLIENT_SECRET"]
 region = os.environ.get("OCI_REGION", "us-ashburn-1")
+
 secret_id = "ocid1.vaultsecret.oc1.iad.amaaaaaac3adhhqacfyyvmkejvczkklmmex7xirxyc3hyynboi72xzok4ica"
 
 # Debug output
