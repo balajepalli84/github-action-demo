@@ -1,52 +1,46 @@
-name: 11_Run Token Exchange SDK Test with GitHub OIDC JWT
+name: 11_Test OCI Token Exchange
+
+permissions:
+  id-token: write
+  contents: read
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [ main ]
 
 jobs:
-  run-test:
+  run-sdk-test:
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
 
-    env:
-      OCI_DOMAIN_ID: "idcs-8dd307747946491cbfe1b7a3f063db0d"
-      OCI_CLIENT_ID: "8aa264f421d646e98699b716b2e9b72e"
-      OCI_CLIENT_SECRET: "idcscs-59183ab6-657c-4a24-ad24-ffae6c8bc061"
-      OCI_REGION: ${{ vars.OCI_REGION }}
-      OCI_TENANCY: ${{ vars.OCI_TENANCY }}
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Get OIDC Token
+        id: oidc
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const idToken = await core.getIDToken("oracle-cloud");
+            core.setOutput("id_token", idToken);
+
+      - name: Write OIDC token to file
+        run: |
+          mkdir -p .oci
+          echo "${{ steps.oidc.outputs.id_token }}" > .oci/id-token.jwt
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: 3.11
 
-      - name: Install custom OCI SDK
-        run: |
-          pip install --upgrade pip
-          pip install git+https://github.com/balajepalli84/oci-python-sdk-token-exchange.git
+      - name: Install dependencies
+        run: pip install -r requirements.txt
 
-      - name: Fetch GitHub OIDC Token
-        id: jwt
-        run: |
-          mkdir -p .oci
-          curl -sSL -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=${CLIENT_ID}" > id-token.json
-
-          JWT=$(jq -r '.value' id-token.json)
-          echo "$JWT" > .oci/id-token.jwt
-          echo "jwt=$JWT" >> $GITHUB_OUTPUT
-
-      - name: Run test_sdk.py
+      - name: Run test script
         env:
-          OCI_JWT: ${{ steps.jwt.outputs.jwt }}
-          OCI_DOMAIN_ID: ${{ env.OCI_DOMAIN_ID }}
-          OCI_CLIENT_ID: ${{ env.OCI_CLIENT_ID }}
-          OCI_CLIENT_SECRET: ${{ env.OCI_CLIENT_SECRET }}
-          OCI_REGION: ${{ env.OCI_REGION }}
-        run: |
-          python scripts/test_sdk.py
+          OCI_DOMAIN_ID: idcs-8dd307747946491cbfe1b7a3f063db0d
+          OCI_CLIENT_ID: 8aa264f421d646e98699b716b2e9b72e
+          OCI_CLIENT_SECRET: idcscs-59183ab6-657c-4a24-ad24-ffae6c8bc061
+          OCI_REGION: us-ashburn-1
+        run: python scripts/test_sdk.py
