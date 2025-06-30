@@ -7,8 +7,11 @@ jobs:
   run-test:
     runs-on: ubuntu-latest
     permissions:
-      id-token: write  # Needed to request the OIDC token
-      contents: read   # Required for checking out the repo
+      id-token: write
+      contents: read
+
+    env:
+      CLIENT_ID: ${{ secrets.OCI_CLIENT_ID }}
 
     steps:
       - name: Checkout code
@@ -19,24 +22,25 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install custom OCI SDK
+      - name: Install dependencies
         run: |
           pip install --upgrade pip
           pip install -e git+https://github.com/balajepalli84/oci-python-sdk-token-exchange#egg=oci
 
-      - name: Request OIDC token from GitHub
-        id: get-jwt
+      - name: Fetch GitHub OIDC Token
+        id: jwt
         run: |
-          JWT=$(curl -s -X POST \
-            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            -H "Accept: application/json" \
-            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=oracle-cloud" \
-            | jq -r .value)
-          echo "OCI_JWT=$JWT" >> $GITHUB_ENV
+          mkdir -p .oci
+          curl -sSL -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=${CLIENT_ID}" > id-token.json
+
+          JWT=$(jq -r '.value' id-token.json)
+          echo "$JWT" > .oci/id-token.jwt
+          echo "jwt=$JWT" >> $GITHUB_OUTPUT
 
       - name: Run test_sdk.py
         env:
-          OCI_JWT: ${{ env.OCI_JWT }}
+          OCI_JWT: ${{ steps.jwt.outputs.jwt }}
           OCI_DOMAIN_ID: ${{ secrets.OCI_DOMAIN_ID }}
           OCI_CLIENT_ID: ${{ secrets.OCI_CLIENT_ID }}
           OCI_CLIENT_SECRET: ${{ secrets.OCI_CLIENT_SECRET }}
