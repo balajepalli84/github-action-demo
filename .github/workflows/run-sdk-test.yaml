@@ -1,4 +1,4 @@
-name: 11_SDK_test
+name: 11_SDK_Test OCI Token Exchange
 
 permissions:
   id-token: write
@@ -33,8 +33,8 @@ jobs:
         with:
           python-version: 3.11
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt
+      - name: Install custom OCI SDK
+        run: pip install git+https://github.com/balajepalli84/oci-python-sdk-token-exchange.git
 
       - name: Run test script
         env:
