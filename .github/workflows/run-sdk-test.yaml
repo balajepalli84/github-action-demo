@@ -1,4 +1,4 @@
-name: Run Token Exchange SDK Test with GitHub OIDC JWT
+name: 11_Run Token Exchange SDK Test with GitHub OIDC JWT
 
 on:
   workflow_dispatch:
