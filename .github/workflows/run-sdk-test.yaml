@@ -1,4 +1,4 @@
-name: 11_Run Token Exchange SDK Test with GitHub OIDC JWT
+name: Run Token Exchange SDK Test with GitHub OIDC JWT
 
 on:
   workflow_dispatch:
@@ -11,7 +11,15 @@ jobs:
       contents: read
 
     env:
-      CLIENT_ID: ${{ secrets.OCI_CLIENT_ID }}
+      CLIENT_ID: "8aa264f421d646e98699b716b2e9b72e"
+      CLIENT_SECRET: "idcscs-59183ab6-657c-4a24-ad24-ffae6c8bc061"
+      DOMAIN_BASE_URL: "https://idcs-8dd307747946491cbfe1b7a3f063db0d.identity.oraclecloud.com"
+      OCI_DOMAIN_ID: "idcs-8dd307747946491cbfe1b7a3f063db0d"
+      OCI_CLIENT_ID: "8aa264f421d646e98699b716b2e9b72e"
+      OCI_CLIENT_SECRET: "idcscs-59183ab6-657c-4a24-ad24-ffae6c8bc061"
+      OCI_REGION: ${{ vars.OCI_REGION }}
+      OCI_TENANCY: ${{ vars.OCI_TENANCY }}
+      OCI_SECRET_ID: ${{ secrets.OCI_SECRET_ID }}
 
     steps:
       - name: Checkout code
@@ -22,7 +30,7 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
+      - name: Install custom OCI SDK
         run: |
           pip install --upgrade pip
           pip install -e git+https://github.com/balajepalli84/oci-python-sdk-token-exchange#egg=oci
@@ -41,10 +49,10 @@ jobs:
       - name: Run test_sdk.py
         env:
           OCI_JWT: ${{ steps.jwt.outputs.jwt }}
-          OCI_DOMAIN_ID: ${{ secrets.OCI_DOMAIN_ID }}
-          OCI_CLIENT_ID: ${{ secrets.OCI_CLIENT_ID }}
-          OCI_CLIENT_SECRET: ${{ secrets.OCI_CLIENT_SECRET }}
-          OCI_REGION: us-ashburn-1
-          OCI_SECRET_ID: ${{ secrets.OCI_SECRET_ID }}
+          OCI_DOMAIN_ID: ${{ env.OCI_DOMAIN_ID }}
+          OCI_CLIENT_ID: ${{ env.OCI_CLIENT_ID }}
+          OCI_CLIENT_SECRET: ${{ env.OCI_CLIENT_SECRET }}
+          OCI_REGION: ${{ env.OCI_REGION }}
+          OCI_SECRET_ID: ${{ env.OCI_SECRET_ID }}
         run: |
           python scripts/test_sdk.py
