@@ -47,4 +47,4 @@ jobs:
           OCI_REGION: us-ashburn-1
           OCI_SECRET_ID: ${{ secrets.OCI_SECRET_ID }}
         run: |
-          python test_sdk.py
+          python scripts/test_sdk.py
