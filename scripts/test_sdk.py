@@ -28,6 +28,10 @@ signer = oci.auth.signers.TokenExchangeSigner(
     OCI_CLIENT_ID,
     OCI_CLIENT_SECRET
 )
+secrets_client = oci.secrets.SecretsClient(
+    config={"region": region},
+    signer=signer
+)
 for i in range(10):
     try:
         response = secrets_client.get_secret_bundle(secret_id)
