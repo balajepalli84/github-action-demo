@@ -1,4 +1,4 @@
-name: Run Token Exchange SDK Test
+name: Run Token Exchange SDK Test with GitHub OIDC JWT
 
 on:
   workflow_dispatch:
@@ -6,6 +6,9 @@ on:
 jobs:
   run-test:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # Needed to request the OIDC token
+      contents: read   # Required for checking out the repo
 
     steps:
       - name: Checkout code
@@ -21,9 +24,19 @@ jobs:
           pip install --upgrade pip
           pip install -e git+https://github.com/balajepalli84/oci-python-sdk-token-exchange#egg=oci
 
+      - name: Request OIDC token from GitHub
+        id: get-jwt
+        run: |
+          JWT=$(curl -s -X POST \
+            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            -H "Accept: application/json" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=oracle-cloud" \
+            | jq -r .value)
+          echo "OCI_JWT=$JWT" >> $GITHUB_ENV
+
       - name: Run test_sdk.py
         env:
-          OCI_JWT: ${{ secrets.OCI_JWT }}
+          OCI_JWT: ${{ env.OCI_JWT }}
           OCI_DOMAIN_ID: ${{ secrets.OCI_DOMAIN_ID }}
           OCI_CLIENT_ID: ${{ secrets.OCI_CLIENT_ID }}
           OCI_CLIENT_SECRET: ${{ secrets.OCI_CLIENT_SECRET }}
