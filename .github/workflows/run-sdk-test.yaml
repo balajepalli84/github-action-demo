@@ -1,12 +1,11 @@
-name: Test OCI Token Exchange
+name: 11_SDK_test
 
 permissions:
   id-token: write
   contents: read
 
 on:
-  push:
-    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   run-sdk-test:
