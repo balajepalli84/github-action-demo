@@ -1,4 +1,4 @@
-name: Download GitHub OIDC JWT
+name: 2_SDK_Download GitHub OIDC JWT
 
 on:
   workflow_dispatch:
