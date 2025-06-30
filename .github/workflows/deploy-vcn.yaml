@@ -1,54 +1,48 @@
-name:  GitHub OIDC JWT
+name: Download GitHub OIDC JWT
 
 on:
   workflow_dispatch:
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
-  run-test:
+  get-jwt:
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
 
     env:
-      CLIENT_ID: "8aa264f421d646e98699b716b2e9b72e"
-      CLIENT_SECRET: "idcscs-59183ab6-657c-4a24-ad24-ffae6c8bc061"
-      DOMAIN_BASE_URL: "https://idcs-8dd307747946491cbfe1b7a3f063db0d.identity.oraclecloud.com"
-      OCI_TENANCY: ${{ vars.OCI_TENANCY }}
-      OCI_REGION: ${{ vars.OCI_REGION }}
+      CLIENT_ID: 8aa264f421d646e98699b716b2e9b72e  # Used if you want to change audience
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Request GitHub OIDC token and save to file
+        run: |
+          TOKEN=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=github-actions" \
+            | jq -r .value)
+
+          echo "$TOKEN" > jwt_token.txt
+
+      - name: Move JWT to .oci/id-token.jwt
+        run: |
+          mkdir -p .oci
+          mv jwt_token.txt .oci/id-token.jwt
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: 3.11
 
-      - name: Install dependencies
-        run: |
-          pip install --upgrade pip
-          pip install -e git+https://github.com/balajepalli84/oci-python-sdk-token-exchange#egg=oci
+      - name: Install custom OCI SDK
+        run: pip install git+https://github.com/balajepalli84/oci-python-sdk-token-exchange.git
 
-      - name: Fetch GitHub OIDC Token
-        id: jwt
-        run: |
-          mkdir -p .oci
-          curl -sSL -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=${CLIENT_ID}" > id-token.json
-
-          JWT=$(jq -r '.value' id-token.json)
-          echo "$JWT" > .oci/id-token.jwt
-          echo "jwt=$JWT" >> $GITHUB_OUTPUT
-
-      - name: Run test_sdk.py
+      - name: Run test script
         env:
-          OCI_JWT: ${{ steps.jwt.outputs.jwt }}
-          OCI_CLIENT_ID: ${{ env.CLIENT_ID }}
-          OCI_CLIENT_SECRET: ${{ env.CLIENT_SECRET }}
-          OCI_DOMAIN_ID: "idcs-8dd307747946491cbfe1b7a3f063db0d"
-          OCI_REGION: ${{ env.OCI_REGION }}
-          OCI_SECRET_ID: ${{ secrets.OCI_SECRET_ID }}
-        run: |
-          python scripts/test_sdk.py
+          OCI_DOMAIN_ID: idcs-8dd307747946491cbfe1b7a3f063db0d
+          OCI_CLIENT_ID: 8aa264f421d646e98699b716b2e9b72e
+          OCI_CLIENT_SECRET: idcscs-59183ab6-657c-4a24-ad24-ffae6c8bc061
+          OCI_REGION: us-ashburn-1
+        run: python scripts/test_sdk.py
