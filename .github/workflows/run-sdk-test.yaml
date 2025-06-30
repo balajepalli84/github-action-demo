@@ -11,22 +11,23 @@ jobs:
   run-sdk-test:
     runs-on: ubuntu-latest
 
+    env:
+      CLIENT_ID: 8aa264f421d646e98699b716b2e9b72e  # This is used as the "audience" in the OIDC request
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Get OIDC Token
-        id: oidc
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const idToken = await core.getIDToken("oracle-cloud");
-            core.setOutput("id_token", idToken);
-
-      - name: Write OIDC token to file
+      - name: Fetch GitHub OIDC Token manually
+        id: jwt
         run: |
           mkdir -p .oci
-          echo "${{ steps.oidc.outputs.id_token }}" > .oci/id-token.jwt
+          curl -sSL -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=${CLIENT_ID}" > id-token.json
+
+          JWT=$(jq -r '.value' id-token.json)
+          echo "$JWT" > .oci/id-token.jwt
+          echo "jwt=$JWT" >> $GITHUB_OUTPUT
 
       - name: Set up Python
         uses: actions/setup-python@v5
