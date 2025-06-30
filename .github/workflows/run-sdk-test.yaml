@@ -1,4 +1,4 @@
-name: 11_Test OCI Token Exchange
+name: Test OCI Token Exchange
 
 permissions:
   id-token: write
