@@ -1,0 +1,33 @@
+name: Run Token Exchange SDK Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install custom OCI SDK
+        run: |
+          pip install --upgrade pip
+          pip install -e git+https://github.com/balajepalli84/oci-python-sdk-token-exchange#egg=oci
+
+      - name: Run test_sdk.py
+        env:
+          OCI_JWT: ${{ secrets.OCI_JWT }}
+          OCI_DOMAIN_ID: ${{ secrets.OCI_DOMAIN_ID }}
+          OCI_CLIENT_ID: ${{ secrets.OCI_CLIENT_ID }}
+          OCI_CLIENT_SECRET: ${{ secrets.OCI_CLIENT_SECRET }}
+          OCI_REGION: us-ashburn-1
+          OCI_SECRET_ID: ${{ secrets.OCI_SECRET_ID }}
+        run: |
+          python test_sdk.py
