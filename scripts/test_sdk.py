@@ -10,6 +10,10 @@ if not os.path.exists(jwt_path):
     exit(1)
 
 OCI_JWT = open(jwt_path).read().strip()
+print(f" OCI_JWT Token (length) = {len(OCI_JWT)}")
+header = base64.urlsafe_b64decode(OCI_JWT.split('.')[0] + '==').decode()
+print("JWT Header:", header)
+
 
 # 🔐 PRINT JWT — be aware this exposes the token in logs
 print(f" OCI_JWT Token   = {OCI_JWT}")
