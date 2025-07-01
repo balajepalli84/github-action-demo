@@ -32,18 +32,13 @@ secrets_client = oci.secrets.SecretsClient(
     config={"region": region},
     signer=signer
 )
-for i in range(10):
-    try:
-        response = secrets_client.get_secret_bundle(secret_id)
-        base64_content = response.data.secret_bundle_content.content
-        print(f"Iteration {i+1}: Secret content (base64): {base64_content}")
-        decoded_content = base64.b64decode(base64_content).decode("utf-8")
-        print("\nSecret fetched successfully:")
-        print(f"  Base64-Encoded: {base64_content}")
-        print(f"  Decoded Value : {decoded_content}")
-        
-    except Exception as e:
-        print(f"Iteration {i+1} failed: {str(e)}")
-    if i < 9:
-        print("Sleeping for 61 minutes...")
-        time.sleep(3700)  # 61 minutes
+for i in range(10):    
+    response = secrets_client.get_secret_bundle(secret_id)
+    base64_content = response.data.secret_bundle_content.content
+    print(f"Iteration {i+1}: Secret content (base64): {base64_content}")
+    decoded_content = base64.b64decode(base64_content).decode("utf-8")
+    print("\nSecret fetched successfully:")
+    print(f"  Base64-Encoded: {base64_content}")
+    print(f"  Decoded Value : {decoded_content}")
+    print("Sleeping for 61 minutes...")
+    time.sleep(3700)  # 61 minutes
