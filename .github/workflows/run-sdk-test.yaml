@@ -28,6 +28,12 @@ jobs:
           JWT=$(jq -r '.value' id-token.json)
           echo "$JWT" > .oci/id-token.jwt
           echo "jwt=$JWT" >> $GITHUB_OUTPUT
+      - name: Debug OIDC Token
+        run: |
+          echo "Contents of id-token.json:"
+          cat id-token.json
+          echo "Contents of .oci/id-token.jwt:"
+          cat .oci/id-token.jwt
 
       - name: Set up Python
         uses: actions/setup-python@v5
