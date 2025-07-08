@@ -5,36 +5,34 @@ import time
 import sys, requests
 
 
-'''
-OCI_JWT
-This is the JWT token from Github OIDC. Either rdirectly pass the value or use the getJWT() function to read from Github
-The same will is true for any OIDC identity provider.
-
-def get_jwt():
-    return open(r"C:\Users\Ramesh\.oci\jwt_token.txt").read().strip()
-'''
-'''
-These values are from the OCI Identity Domain created for the OIDC identity provider
-Ideally, they should be stored in a secure location like Github secrets
-'''
 OCI_DOMAIN_ID = "idcs-8dd307747946491cbfe1b7a3f063db0d"
 OCI_CLIENT_ID = "8aa264f421d646e98699b716b2e9b72e"
 OCI_CLIENT_SECRET = "idcscs-59183ab6-657c-4a24-ad24-ffae6c8bc061"
+
+import os
+import requests
 
 def get_jwt():
     # Fetch required environment variables
     token = os.environ.get("ACTIONS_ID_TOKEN_REQUEST_TOKEN")
     url = os.environ.get("ACTIONS_ID_TOKEN_REQUEST_URL")
-    audience = "github-actions"
+    audience = os.environ.get("CLIENT_ID", "github-actions")  # Default to 'github-actions' if not set
+
+    # Print environment variable values
+    print("DEBUG: ACTIONS_ID_TOKEN_REQUEST_TOKEN:", token)
+    print("DEBUG: ACTIONS_ID_TOKEN_REQUEST_URL:", url)
+    print("DEBUG: CLIENT_ID (audience):", audience)
 
     if not token or not url or not audience:
         raise ValueError(
             "Missing environment variables: "
-            "ACTIONS_ID_TOKEN_REQUEST_TOKEN, ACTIONS_ID_TOKEN_REQUEST_URL"
+            "ACTIONS_ID_TOKEN_REQUEST_TOKEN, ACTIONS_ID_TOKEN_REQUEST_URL, or CLIENT_ID"
         )
 
     # Construct the full URL with the audience parameter
     full_url = f"{url}&audience={audience}"
+    print("DEBUG: Full OIDC request URL:", full_url)
+    print("DEBUG: Token is :", token)
 
     # Make the HTTP GET request with Authorization header
     headers = {"Authorization": f"Bearer {token}"}
@@ -43,10 +41,13 @@ def get_jwt():
 
     # Extract the JWT from the JSON response
     jwt = response.json().get("value")
+    print("DEBUG: Generated Bearer JWT:", jwt)
+
     if not jwt:
         raise ValueError("JWT token not found in the response")
 
     return jwt
+
 
 
 '''
