@@ -12,14 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Request GitHub OIDC token and save to file
-        env:
-          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ACTIONS_ID_TOKEN_REQUEST_URL: ${{ steps.id_token_request.outputs.url }}
         run: |
           echo "Getting ID token..."
           RESPONSE=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
             "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=github-actions")
-
           echo "$RESPONSE" | jq -r .value > jwt_token.txt
           echo "Token written to jwt_token.txt"
 
