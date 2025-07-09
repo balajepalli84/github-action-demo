@@ -95,6 +95,7 @@ for i in range(10):
     try:
         response = secrets_client.get_secret_bundle(secret_id)
         base64_content = response.data.secret_bundle_content.content
+        print(f"secret value : {base64_content}",flush=True)  # Print the base64 encoded secret content
         # Use the secret content as needed in your application here
         # For example, decode with: decoded_content = base64.b64decode(base64_content).decode()
     except Exception as e:
