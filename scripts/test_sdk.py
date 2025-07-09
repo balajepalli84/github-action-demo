@@ -4,6 +4,7 @@ import base64
 import time
 import sys
 import requests
+import datetime
 
 # OCI IAM details for token exchange
 OCI_DOMAIN_ID = "idcs-8dd307747946491cbfe1b7a3f063db0d"
@@ -25,11 +26,24 @@ def get_jwt():
     response.raise_for_status()
     jwt = response.json().get("value")
 
-    print("DEBUG: Generated OIDC JWT:", jwt, flush=True)
+    print(f"[{datetime.datetime.now()}] DEBUG: Generated OIDC JWT: {jwt}", flush=True)
 
     if not jwt:
         raise ValueError("JWT token not found in the response")
     return jwt
+
+# Function to sleep with periodic heartbeat logs
+def sleep_with_heartbeat(total_minutes=61, heartbeat_minutes=5):
+    print(f"[{datetime.datetime.now()}] Sleep start: {total_minutes} minutes", flush=True)
+    for minute in range(1, total_minutes + 1):
+        try:
+            time.sleep(60)
+        except Exception as e:
+            print(f"[{datetime.datetime.now()}] Sleep interrupted at minute {minute}: {str(e)}", flush=True)
+            break
+        if minute % heartbeat_minutes == 0:
+            print(f"[{datetime.datetime.now()}] Heartbeat: Slept {minute} minutes...", flush=True)
+    print(f"[{datetime.datetime.now()}] Sleep finished.", flush=True)
 
 # OCI region and Vault Secret OCID
 region = "us-ashburn-1"
@@ -51,19 +65,14 @@ secrets_client = oci.secrets.SecretsClient(
 
 # Loop 10 times, read the secret, and sleep 61 minutes between
 for i in range(10):
+    print(f"[{datetime.datetime.now()}] ===== Iteration {i+1} =====", flush=True)
     try:
         response = secrets_client.get_secret_bundle(secret_id)
         base64_content = response.data.secret_bundle_content.content
-        print(f"Iteration {i+1}: Secret content (base64): {base64_content}", flush=True)
+        print(f"[{datetime.datetime.now()}] Secret content (base64): {base64_content}", flush=True)
     except Exception as e:
-        print(f"Iteration {i+1} failed: {str(e)}", flush=True)
+        print(f"[{datetime.datetime.now()}] Iteration {i+1} failed: {str(e)}", flush=True)
 
     if i < 9:
-        print("Sleeping for 61 minutes with heartbeat logs every 5 minutes...", flush=True)
-        total_sleep_seconds = 61 * 60  # 3660 seconds
-        heartbeat_interval = 300  # 5 minutes
-
-        for minute in range(0, total_sleep_seconds, 60):
-            time.sleep(60)
-            if (minute + 60) % heartbeat_interval == 0:
-                print(f"Heartbeat: Slept {(minute + 60) // 60} minutes...", flush=True)
+        print(f"[{datetime.datetime.now()}] Sleeping for 61 minutes with heartbeat logs every 5 minutes...", flush=True)
+        sleep_with_heartbeat()
