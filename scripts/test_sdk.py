@@ -80,7 +80,8 @@ signer = oci.auth.signers.TokenExchangeSigner(
     get_jwt,        # Function to get JWT token
     OCI_DOMAIN_ID,  # OCI domain ID from environment
     OCI_CLIENT_ID,  # OCI client ID from environment
-    OCI_CLIENT_SECRET  # OCI client secret from environment
+    OCI_CLIENT_SECRET, 
+    log_requests=True 
 )
 
 # Initialize the OCI SecretsClient with the signer and region
