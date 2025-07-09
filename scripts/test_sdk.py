@@ -24,7 +24,7 @@ def get_jwt():
     jwt = response.json().get("value")
 
     # Print the token for debugging
-    print("DEBUG: Generated OIDC JWT:", jwt)
+    print("DEBUG: Generated OIDC JWT:", jwt, flush=True)
 
     if not jwt:
         raise ValueError("JWT token not found in the response")
@@ -70,10 +70,10 @@ for i in range(10):
     try:
         response = secrets_client.get_secret_bundle(secret_id)
         base64_content = response.data.secret_bundle_content.content
-        print(f"Iteration {i+1}: Secret content (base64): {base64_content}")
+        print(f"Iteration {i+1}: Secret content (base64): {base64_content}", flush=True)
     except Exception as e:
-        print(f"Iteration {i+1} failed: {str(e)}")
+        print(f"Iteration {i+1} failed: {str(e)}", flush=True)
     if i < 9:
-        print("Sleeping for 61 minutes...")
+        print("Sleeping for 61 minutes...", flush=True)
         time.sleep(3700)  # 61 minutes
 
