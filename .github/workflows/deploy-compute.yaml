@@ -25,9 +25,9 @@ jobs:
         run: pip install requests
       - name: Run test script
         env:
-          OCI_DOMAIN_ID: idcs-662d171902fa49ae8b36082f0ec4a9e2
-          OCI_CLIENT_ID: 7f63d90124764cfc830625db190acfd9
-          OCI_CLIENT_SECRET: idcscs-c36def77-6110-405d-bf74-43beb864e941
+          OCI_DOMAIN_ID: idcs-2615d95acce94592a217756c7d2f8c48
+          OCI_CLIENT_ID: 63425de706f04c7c856198779489b3f5
+          OCI_CLIENT_SECRET: idcscs-aad9cf27-cbb5-4bcf-a8cd-5a3ce6fc50d6
           OCI_REGION: us-ashburn-1
           ACTIONS_STEP_DEBUG: true
           ACTIONS_RUNNER_DEBUG: true
