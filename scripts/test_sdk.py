@@ -95,12 +95,15 @@ for i in range(10):
     try:
         response = secrets_client.get_secret_bundle(secret_id)
         base64_content = response.data.secret_bundle_content.content
-        print(f"secret value : {base64_content}",flush=True)  # Print the base64 encoded secret content
-        # Use the secret content as needed in your application here
-        # For example, decode with: decoded_content = base64.b64decode(base64_content).decode()
+        
+        # Convert Base64 to regular string
+        decoded_content = base64.b64decode(base64_content).decode("utf-8")
+        
+        print(f"Secret value (decoded): {decoded_content}", flush=True)
+        
     except Exception as e:
-        # Handle exceptions as needed (e.g., logging, error handling)
-        pass
+        print(f"Error reading secret: {e}", flush=True)
+    
     if i < 9:
-        # Sleep for 61 minutes before the next iteration to test token refresh
         time.sleep(3700)  # 61 minutes
+
