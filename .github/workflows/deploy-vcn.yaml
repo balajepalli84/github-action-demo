@@ -1,4 +1,4 @@
-name: Deploy Compute with GitHub OIDC to OCI UPST
+name: Deploy VCN with GitHub OIDC to OCI UPST
 
 on:
   workflow_dispatch:
