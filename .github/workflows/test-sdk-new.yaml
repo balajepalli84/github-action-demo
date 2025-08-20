@@ -1,0 +1,55 @@
+name: Test_SDK_Py_Changes
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run-sdk-test:
+    runs-on: ubuntu-latest
+
+    env:
+      CLIENT_ID: 8aa264f421d646e98699b716b2e9b72e  # This is used as the "audience" in the OIDC request
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Fetch GitHub OIDC Token manually
+        id: jwt
+        run: |
+          mkdir -p .oci
+          curl -sSL -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=${CLIENT_ID}" > id-token.json
+
+          JWT=$(jq -r '.value' id-token.json)
+          echo "$JWT" > .oci/id-token.jwt
+          echo "jwt=$JWT" >> $GITHUB_OUTPUT
+      - name: Debug OIDC Token
+        run: |
+          echo "Contents of id-token.json:"
+          cat id-token.json
+          echo "Contents of .oci/id-token.jwt:"
+          cat .oci/id-token.jwt
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+
+      - name: Install custom OCI SDK
+        run: pip install git+https://github.com/balajepalli84/oci-python-sdk-token-exchange.git
+      - name: Install dependencies
+        run: pip install requests
+      - name: Run test script
+        env:
+          OCI_DOMAIN_ID: idcs-8dd307747946491cbfe1b7a3f063db0d
+          OCI_CLIENT_ID: 8aa264f421d646e98699b716b2e9b72e
+          OCI_CLIENT_SECRET: idcscs-59183ab6-657c-4a24-ad24-ffae6c8bc061
+          OCI_REGION: us-ashburn-1
+          ACTIONS_STEP_DEBUG: true
+          ACTIONS_RUNNER_DEBUG: true
+        run: python scripts/test_sdk.py
