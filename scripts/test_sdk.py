@@ -38,6 +38,7 @@ def get_jwt():
     """
     token = os.environ.get("ACTIONS_ID_TOKEN_REQUEST_TOKEN") # Bearer token for GitHub OIDC
     url = os.environ.get("ACTIONS_ID_TOKEN_REQUEST_URL") # Github OIDC endpoint URL
+    print(f"OIDC request URL: {url}", flush=True)
     audience = "github-actions" # Audience for the token, typically "github-actions"
     if not token or not url or not audience:
         raise ValueError("Missing required environment variables for JWT retrieval.")
