@@ -96,12 +96,10 @@ jobs:
         if: env.success == 'true'
         run: |
           mkdir -p .oci
-          cp .oci/temp_private.pem .oci/temp_private.pem
-          cp .oci/upst.token .oci/upst.token
           chmod 600 .oci/temp_private.pem .oci/upst.token
-
+      
           FINGERPRINT=$(openssl rsa -pubout -outform DER -in .oci/temp_private.pem 2>/dev/null | openssl md5 -c | awk '{print $2}')
-
+      
           CONFIG_PATH=".oci/1_config"
           echo "[upst]" > $CONFIG_PATH
           echo "region=${OCI_REGION}" >> $CONFIG_PATH
@@ -109,7 +107,7 @@ jobs:
           echo "fingerprint=${FINGERPRINT}" >> $CONFIG_PATH
           echo "key_file=.oci/temp_private.pem" >> $CONFIG_PATH
           echo "security_token_file=.oci/upst.token" >> $CONFIG_PATH
-
+      
           echo "OCI_CONFIG_FILE=$CONFIG_PATH" >> $GITHUB_ENV
 
       - name: Upload Debug Files (Always)
