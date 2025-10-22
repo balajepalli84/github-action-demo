@@ -13,8 +13,8 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      CLIENT_ID: "63425de706f04c7c856198779489b3f5"
-      CLIENT_SECRET: "idcscs-aad9cf27-cbb5-4bcf-a8cd-5a3ce6fc50d6"
+      CLIENT_ID: "b15094b8f4204b76a7a834f189221284"
+      CLIENT_SECRET: "idcscs-e431c0d2-dfcb-4a19-98ea-d8eee67ba721"
       DOMAIN_BASE_URL: "https://idcs-2615d95acce94592a217756c7d2f8c48.identity.oraclecloud.com:443"
       OCI_TENANCY: ${{ vars.OCI_TENANCY }}
       OCI_REGION: ${{ vars.OCI_REGION }}
