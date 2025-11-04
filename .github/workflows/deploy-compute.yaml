@@ -39,3 +39,21 @@ jobs:
         with:
           name: github-oidc-token
           path: oidc_token.txt
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+
+      - name: Install custom OCI SDK
+        run: pip install git+https://github.com/balajepalli84/rbalajep-oci-python-sdk.git
+      - name: Install dependencies
+        run: pip install requests
+      - name: Run test script
+        env:
+          OCI_DOMAIN_ID: idcs-2615d95acce94592a217756c7d2f8c48.identity.oraclecloud.com
+          OCI_CLIENT_ID: b15094b8f4204b76a7a834f189221284
+          OCI_CLIENT_SECRET: idcscs-e431c0d2-dfcb-4a19-98ea-d8eee67ba721
+          OCI_REGION: us-ashburn-1
+          ACTIONS_STEP_DEBUG: true
+          ACTIONS_RUNNER_DEBUG: true
+        run: python scripts/WIF_Signer_Test.py
