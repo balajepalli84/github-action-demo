@@ -47,8 +47,8 @@ jobs:
       - name: Run test script
         env:
           OCI_DOMAIN_ID: idcs-2615d95acce94592a217756c7d2f8c48.identity.oraclecloud.com
-          OCI_CLIENT_ID: bb5961c04f6245168f92a1fe56c88d8e
-          OCI_CLIENT_SECRET: idcscs-40b00d0c-365d-4ade-8f7f-c56dc6f03b2e
+          OCI_CLIENT_ID: b15094b8f4204b76a7a834f189221284
+          OCI_CLIENT_SECRET: idcscs-e431c0d2-dfcb-4a19-98ea-d8eee67ba721
           OCI_REGION: us-ashburn-1
           ACTIONS_STEP_DEBUG: true
           ACTIONS_RUNNER_DEBUG: true
