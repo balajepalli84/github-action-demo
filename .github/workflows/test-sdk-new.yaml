@@ -52,4 +52,4 @@ jobs:
           OCI_REGION: us-ashburn-1
           ACTIONS_STEP_DEBUG: true
           ACTIONS_RUNNER_DEBUG: true
-        run: python scripts/test_sdk.py
+        run: python scripts/WIF_Signer_Test.py
