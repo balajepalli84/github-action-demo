@@ -46,7 +46,7 @@ jobs:
         run: pip install requests
       - name: Run test script
         env:
-          OCI_DOMAIN_ID: idcs-8dd307747946491cbfe1b7a3f063db0d
+          OCI_DOMAIN_ID: idcs-8dd307747946491cbfe1b7a3f063db0d.identity.oraclecloud.com
           OCI_CLIENT_ID: 8aa264f421d646e98699b716b2e9b72e
           OCI_CLIENT_SECRET: idcscs-59183ab6-657c-4a24-ad24-ffae6c8bc061
           OCI_REGION: us-ashburn-1
