@@ -15,7 +15,7 @@ OCI_DOMAIN_ID = os.environ["OCI_DOMAIN_ID"]
 OCI_CLIENT_ID = os.environ["OCI_CLIENT_ID"]
 OCI_CLIENT_SECRET = os.environ["OCI_CLIENT_SECRET"]
 region = os.environ.get("OCI_REGION", "us-ashburn-1")
-secret_id = os.environ["OCI_SECRET_ID"]
+secret_id = "ocid1.vaultsecret.oc1.iad.amaaaaaac3adhhqacfyyvmkejvczkklmmex7xirxyc3hyynboi72xzok4ica"
 
 # Debug output
 print(" Input Parameters:")
