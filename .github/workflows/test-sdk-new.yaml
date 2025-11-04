@@ -41,7 +41,7 @@ jobs:
           python-version: 3.11
 
       - name: Install custom OCI SDK
-        run: pip install git+https://github.com/balajepalli84/oci-python-sdk-token-exchange.git
+        run: pip install git+https://github.com/balajepalli84/rbalajep-oci-python-sdk.git
       - name: Install dependencies
         run: pip install requests
       - name: Run test script
