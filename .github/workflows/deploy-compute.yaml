@@ -1,4 +1,4 @@
-name: 11_SDK_Test OCI Token Exchange
+name: working_WIF_sginer_code
 
 permissions:
   id-token: write
