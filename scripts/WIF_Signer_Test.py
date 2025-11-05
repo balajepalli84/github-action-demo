@@ -5,9 +5,9 @@ import base64
 print("Starting test with TokenExchangeSigner...")
 
 # Read JWT token
-jwt_path = ".oci/id-token.jwt"
+jwt_path = "oidc_token.txt"
 if not os.path.exists(jwt_path):
-    print(f" JWT token file not found: {jwt_path}")
+    print(f"JWT token file not found: {jwt_path}")
     exit(1)
 
 OCI_JWT = open(jwt_path).read().strip()
