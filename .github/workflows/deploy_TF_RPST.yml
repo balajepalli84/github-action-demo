@@ -1,4 +1,4 @@
-name: Deploy VCN with GitHub OIDC to OCI RPST
+name: RPST - Deploy VCN with GitHub OIDC to OCI
 
 on:
   workflow_dispatch:
@@ -63,10 +63,11 @@ jobs:
             --header "Content-Type: application/x-www-form-urlencoded" \
             --header "Authorization: Basic $AUTH_HEADER" \
             --data-urlencode "grant_type=urn:ietf:params:oauth:grant-type:token-exchange" \
-            --data-urlencode "requested_token_type=urn:oci:token-type:oci-RPST" \
+            --data-urlencode "requested_token_type=urn:oci:token-type:oci-rpst" \
             --data-urlencode "subject_token=$SUBJECT_TOKEN" \
             --data-urlencode "subject_token_type=jwt" \
             --data-urlencode "public_key=$PUBKEY" \
+            --data-urlencode "res_type=ref_github"
             "${DOMAIN_BASE_URL}/oauth2/v1/token")
 
           echo "$RESPONSE" > .oci/RPST-response.json
