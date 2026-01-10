@@ -67,7 +67,7 @@ jobs:
             --data-urlencode "subject_token=$SUBJECT_TOKEN" \
             --data-urlencode "subject_token_type=jwt" \
             --data-urlencode "public_key=$PUBKEY" \
-            --data-urlencode "res_type=ref_github"
+            --data-urlencode "res_type=ref_github" \
             "${DOMAIN_BASE_URL}/oauth2/v1/token")
 
           echo "$RESPONSE" > .oci/RPST-response.json
