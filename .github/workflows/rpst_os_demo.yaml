@@ -134,27 +134,27 @@ jobs:
         run: |
           mkdir -p /home/runner/.oci
           cp /home/runner/work/github-action-demo/github-action-demo/.oci/RPST_config /home/runner/.oci/config
-        working-directory: terraform/vcn
+        working-directory: terraform/OS
                 
       - name: Set up Terraform
         if: env.success == 'true'
         uses: hashicorp/setup-terraform@v3
 
-      - name: Terraform Init (VCN)
+      - name: Terraform Init (OS)
         if: env.success == 'true'
         run: terraform init
         working-directory: terraform/rpst-os
         env:
           OCI_CONFIG_FILE: ${{ env.OCI_CONFIG_FILE }}
       
-      - name: Terraform Plan (VCN)
+      - name: Terraform Plan (OS)
         if: env.success == 'true'
         run: terraform plan
         working-directory: terraform/rpst-os
         env:
           OCI_CONFIG_FILE: ${{ env.OCI_CONFIG_FILE }}
       
-      - name: Terraform Apply (VCN)
+      - name: Terraform Apply (OS)
         if: env.success == 'true'
         run: terraform apply -auto-approve
         working-directory: terraform/rpst-os
