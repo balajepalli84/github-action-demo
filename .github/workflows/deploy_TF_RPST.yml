@@ -16,7 +16,7 @@ jobs:
       CLIENT_SECRET: "idcscs-836c279c-2126-4a6b-b6dd-d506d5871747"
       DOMAIN_BASE_URL: "https://idcs-2e5549d1bc154fef937243cd31fcf1af.identity.oraclecloud.com:443"
       OCI_TENANCY: ${{ vars.OCI_TENANCY }}
-      OCI_REGION: ${{ vars.OCI_REGION }}
+      OCI_REGION: "ca-toronto-1"
 
     steps:
       - name: Checkout
@@ -128,7 +128,14 @@ jobs:
             .oci/temp_private.pem
             .oci/RPST.token
             .oci/RPST_config
-
+            
+      - name: Prepare OCI config for Terraform
+        if: env.success == 'true'
+        run: |
+          mkdir -p /home/runner/.oci
+          cp .oci/RPST_config /home/runner/.oci/config
+        working-directory: terraform/vcn
+                
       - name: Set up Terraform
         if: env.success == 'true'
         uses: hashicorp/setup-terraform@v3
