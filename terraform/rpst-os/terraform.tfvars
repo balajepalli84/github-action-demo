@@ -1,0 +1,5 @@
+region           = "ca-toronto-1"
+tenancy_ocid     = "ocid1.tenancy.oc1..aaaaaaaaa3qmjxr43tjexx75r6gwk6vjw22ermohbw2vbxyhczksgjir7xdq"
+compartment_ocid = "ocid1.compartment.oc1..aaaaaaaafklcekq7wnwrt4zxeizcrmvhltz6wxaqzwksbhbs73yz6mtpi5za"
+bucket_name = "testbucket"
+prefix      = ""
