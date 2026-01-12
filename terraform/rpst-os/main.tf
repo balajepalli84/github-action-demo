@@ -2,7 +2,7 @@ provider "oci" {
   region              = var.region
   tenancy_ocid        = var.tenancy_ocid
   auth                = "securitytoken"
-  config_file_profile = "rpst"
+  config_file_profile = "DEFAULT"
 }
 
 # --- Object Storage: read a bucket and list object names ---
