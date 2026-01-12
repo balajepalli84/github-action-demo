@@ -7,20 +7,15 @@ provider "oci" {
 
 # --- Object Storage: read a bucket and list object names ---
 
-# Get namespace automatically
-data "oci_objectstorage_namespace" "ns" {
-  compartment_id = var.tenancy_ocid
-}
-
 # Read existing bucket
 data "oci_objectstorage_bucket" "bucket" {
-  namespace = data.oci_objectstorage_namespace.ns.namespace
+  namespace = "ociateam"
   name      = var.bucket_name
 }
 
 # List objects
 data "oci_objectstorage_objects" "objs" {
-  namespace = data.oci_objectstorage_namespace.ns.namespace
+  namespace = "ociateam"
   bucket    = data.oci_objectstorage_bucket.bucket.name
   prefix    = var.prefix
 }
