@@ -134,7 +134,7 @@ jobs:
         run: |
           mkdir -p /home/runner/.oci
           cp /home/runner/work/github-action-demo/github-action-demo/.oci/RPST_config /home/runner/.oci/config
-        working-directory: terraform/OS
+        working-directory: terraform/vcn
                 
       - name: Set up Terraform
         if: env.success == 'true'
