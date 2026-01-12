@@ -136,20 +136,20 @@ jobs:
       - name: Terraform Init (VCN)
         if: env.success == 'true'
         run: terraform init
-        working-directory: terraform/vcn
+        working-directory: terraform/rpst-vcn
         env:
           OCI_CONFIG_FILE: ${{ env.OCI_CONFIG_FILE }}
       
       - name: Terraform Plan (VCN)
         if: env.success == 'true'
         run: terraform plan
-        working-directory: terraform/vcn
+        working-directory: terraform/rpst-vcn
         env:
           OCI_CONFIG_FILE: ${{ env.OCI_CONFIG_FILE }}
       
       - name: Terraform Apply (VCN)
         if: env.success == 'true'
         run: terraform apply -auto-approve
-        working-directory: terraform/vcn
+        working-directory: terraform/rpst-vcn
         env:
           OCI_CONFIG_FILE: ${{ env.OCI_CONFIG_FILE }}
