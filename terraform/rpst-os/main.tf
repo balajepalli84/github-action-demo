@@ -17,7 +17,7 @@ resource "random_string" "bucket_suffix" {
 }
 
 # ------------------------------------------------
-# 1) CREATE bucket (namespace hard-coded)
+# CREATE bucket with DEFINED TAG
 # ------------------------------------------------
 resource "oci_objectstorage_bucket" "created" {
   compartment_id = var.compartment_ocid
@@ -26,10 +26,15 @@ resource "oci_objectstorage_bucket" "created" {
 
   access_type  = "NoPublicAccess"
   storage_tier = "Standard"
+
+  # -------- Defined Tag --------
+  defined_tags = {
+    "abac.groupname" = "balajepalli84/github-action-demo"
+  }
 }
 
 # ------------------------------------------------
-# 2) READ the SAME bucket using data source
+# READ the SAME bucket using data source
 # ------------------------------------------------
 data "oci_objectstorage_bucket" "bucket" {
   namespace = "ociateam"
@@ -39,7 +44,7 @@ data "oci_objectstorage_bucket" "bucket" {
 }
 
 # ------------------------------------------------
-# 3) LIST objects
+# LIST objects
 # ------------------------------------------------
 data "oci_objectstorage_objects" "objs" {
   namespace = "ociateam"
