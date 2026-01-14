@@ -29,7 +29,7 @@ resource "oci_objectstorage_bucket" "created" {
 
   # -------- Defined Tag --------
   defined_tags = {
-    "Oracle-Standard.CostCenter" = "balajepalli84/github-action-demo"
+    "Oracle-Standard.CostCenter" = "balajepalli/github-action-demo"
   }
 }
 
