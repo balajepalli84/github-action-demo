@@ -17,20 +17,12 @@ resource "random_string" "bucket_suffix" {
 }
 
 # ------------------------------------------------
-# Namespace
-# ------------------------------------------------
-data "oci_objectstorage_namespace" "ns" {
-  compartment_id = var.tenancy_ocid
-}
-
-# ------------------------------------------------
-# 1) CREATE bucket with random name
+# 1) CREATE bucket (namespace hard-coded)
 # ------------------------------------------------
 resource "oci_objectstorage_bucket" "created" {
   compartment_id = var.compartment_ocid
-  namespace      = data.oci_objectstorage_namespace.ns.namespace
-
-  name = "${var.bucket_name_prefix}-${random_string.bucket_suffix.result}"
+  namespace      = "ociateam"
+  name           = "${var.bucket_name_prefix}-${random_string.bucket_suffix.result}"
 
   access_type  = "NoPublicAccess"
   storage_tier = "Standard"
@@ -40,7 +32,7 @@ resource "oci_objectstorage_bucket" "created" {
 # 2) READ the SAME bucket using data source
 # ------------------------------------------------
 data "oci_objectstorage_bucket" "bucket" {
-  namespace = data.oci_objectstorage_namespace.ns.namespace
+  namespace = "ociateam"
   name      = oci_objectstorage_bucket.created.name
 
   depends_on = [oci_objectstorage_bucket.created]
@@ -50,7 +42,7 @@ data "oci_objectstorage_bucket" "bucket" {
 # 3) LIST objects
 # ------------------------------------------------
 data "oci_objectstorage_objects" "objs" {
-  namespace = data.oci_objectstorage_namespace.ns.namespace
+  namespace = "ociateam"
   bucket    = data.oci_objectstorage_bucket.bucket.name
   prefix    = var.prefix
 }
@@ -59,10 +51,10 @@ output "bucket_name" {
   value = data.oci_objectstorage_bucket.bucket.name
 }
 
-output "object_names" {
-  value = [for o in data.oci_objectstorage_objects.objs.objects : o.name]
-}
-
 output "object_count" {
   value = length(data.oci_objectstorage_objects.objs.objects)
+}
+
+output "object_names" {
+  value = [for o in data.oci_objectstorage_objects.objs.objects : o.name]
 }
