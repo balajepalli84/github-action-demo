@@ -5,39 +5,41 @@ provider "oci" {
   config_file_profile = "DEFAULT"
 }
 
-# ------------------------------------------------------------
-# Object Storage: create a new bucket, read it back, list objects
-# ------------------------------------------------------------
-
-# Get namespace automatically
+# -----------------------------
+# Namespace
+# -----------------------------
 data "oci_objectstorage_namespace" "ns" {
   compartment_id = var.tenancy_ocid
 }
 
-# Create a NEW bucket
-resource "oci_objectstorage_bucket" "new_bucket" {
-  compartment_id = var.bucket_compartment_ocid
+# -----------------------------
+# 1) CREATE bucket
+# -----------------------------
+resource "oci_objectstorage_bucket" "created" {
+  compartment_id = var.compartment_ocid
   namespace      = data.oci_objectstorage_namespace.ns.namespace
-  name           = var.new_bucket_name
+  name           = var.bucket_name
 
-  # Optional but common settings (safe defaults)
   access_type  = "NoPublicAccess"
   storage_tier = "Standard"
 }
 
-# Read the bucket using a data source (as requested)
-data "oci_objectstorage_bucket" "created_bucket" {
+# -----------------------------
+# 2) READ the same bucket using data source
+# -----------------------------
+data "oci_objectstorage_bucket" "bucket" {
   namespace = data.oci_objectstorage_namespace.ns.namespace
-  name      = oci_objectstorage_bucket.new_bucket.name
+  name      = oci_objectstorage_bucket.created.name
 
-  # Ensure Terraform creates the bucket before reading it
-  depends_on = [oci_objectstorage_bucket.new_bucket]
+  depends_on = [oci_objectstorage_bucket.created]
 }
 
-# List objects from the bucket (uses the data source bucket name)
+# -----------------------------
+# 3) LIST objects from the bucket
+# -----------------------------
 data "oci_objectstorage_objects" "objs" {
   namespace = data.oci_objectstorage_namespace.ns.namespace
-  bucket    = data.oci_objectstorage_bucket.created_bucket.name
+  bucket    = data.oci_objectstorage_bucket.bucket.name
   prefix    = var.prefix
 }
 
@@ -46,7 +48,7 @@ output "bucket_namespace" {
 }
 
 output "bucket_name" {
-  value = data.oci_objectstorage_bucket.created_bucket.name
+  value = data.oci_objectstorage_bucket.bucket.name
 }
 
 output "object_names" {
