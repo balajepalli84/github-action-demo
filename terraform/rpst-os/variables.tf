@@ -13,9 +13,9 @@ variable "compartment_ocid" {
   description = "OCID of the compartment to deploy resources into"
 }
 
-variable "bucket_name" {
+variable "bucket_name_prefix" {
   type        = string
-  description = "Name of the Object Storage bucket to create (and then read via data source)"
+  description = "Prefix for the Object Storage bucket name"
 }
 
 variable "prefix" {
