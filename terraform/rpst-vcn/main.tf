@@ -2,13 +2,17 @@ provider "oci" {
   region              = var.region
   tenancy_ocid        = var.tenancy_ocid
   auth                = "securitytoken"
-  config_file_profile = "DEFAULT"
+  config_file_profile = "rpst"
 }
 
 resource "oci_core_virtual_network" "my_tf_vcn" {
   cidr_block     = var.vcn_cidr_block
   compartment_id = var.compartment_ocid
   display_name   = var.vcn_display_name
+
+  defined_tags = {
+    "Oracle-Standard.CostCenter" = "balajepalli84/github-action-demo"
+  }
 }
 
 data "oci_core_vcn" "my_tf_vcn_read" {
