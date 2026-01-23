@@ -1,5 +1,5 @@
 
-name: Deploy VCN with GitHub OIDC to OCI UPST
+name: Download UPST
 
 on:
   workflow_dispatch:
