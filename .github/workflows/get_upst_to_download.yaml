@@ -1,1 +1,129 @@
 
+name: Deploy VCN with GitHub OIDC to OCI UPST
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  upst-only:
+    runs-on: ubuntu-latest
+
+    env:
+      CLIENT_ID: "b15094b8f4204b76a7a834f189221284"
+      CLIENT_SECRET: "idcscs-e431c0d2-dfcb-4a19-98ea-d8eee67ba721"
+      DOMAIN_BASE_URL: "https://idcs-2615d95acce94592a217756c7d2f8c48.identity.oraclecloud.com:443"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Generate RSA Key Pair
+        run: |
+          mkdir -p .oci
+          openssl genrsa -out .oci/temp_private.pem 2048
+          openssl rsa -in .oci/temp_private.pem -pubout -out .oci/temp_public.pem
+          chmod 600 .oci/temp_private.pem .oci/temp_public.pem
+
+      - name: Convert Public Key (No Headers)
+        id: pubkey
+        run: |
+          awk '/BEGIN PUBLIC KEY/ {skip=1; next} /END PUBLIC KEY/ {skip=0; next} skip {gsub(/\r/, ""); printf "%s", $0;}' .oci/temp_public.pem > .oci/public_key.one_line.pem
+          PUBKEY=$(cat .oci/public_key.one_line.pem)
+          echo "pubkey=$PUBKEY" >> $GITHUB_OUTPUT
+
+      - name: Fetch GitHub OIDC Token (do not upload token)
+        id: jwt
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          curl -sSL -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=${CLIENT_ID}" > id-token.json
+
+          JWT="$(jq -r '.value' id-token.json)"
+          if [[ -z "$JWT" || "$JWT" == "null" ]]; then
+            echo "Failed to fetch GitHub OIDC token"
+            cat id-token.json
+            exit 1
+          fi
+
+          printf "%s" "$JWT" > .oci/id-token.jwt
+          echo "::add-mask::$JWT"
+
+          # Safe fingerprint (no secret value)
+          jwt_len="${#JWT}"
+          jwt_sha="$(printf "%s" "$JWT" | sha256sum | awk '{print $1}')"
+          cat > .oci/id-token.fingerprint.txt <<EOF
+          oidc_jwt_length=${jwt_len}
+          oidc_jwt_sha256=${jwt_sha}
+          EOF
+
+      - name: Exchange JWT for OCI UPST (do not upload token)
+        id: upst
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          AUTH_HEADER=$(printf "%s" "${CLIENT_ID}:${CLIENT_SECRET}" | base64 | tr -d '\n')
+          SUBJECT_TOKEN=$(tr -d '\n' < .oci/id-token.jwt)
+          PUBKEY=$(tr -d '\n' < .oci/public_key.one_line.pem)
+
+          RESPONSE=$(curl -sSL \
+            --header "Content-Type: application/x-www-form-urlencoded" \
+            --header "Authorization: Basic $AUTH_HEADER" \
+            --data-urlencode "grant_type=urn:ietf:params:oauth:grant-type:token-exchange" \
+            --data-urlencode "requested_token_type=urn:oci:token-type:oci-upst" \
+            --data-urlencode "subject_token=$SUBJECT_TOKEN" \
+            --data-urlencode "subject_token_type=jwt" \
+            --data-urlencode "public_key=$PUBKEY" \
+            "${DOMAIN_BASE_URL}/oauth2/v1/token")
+
+          echo "$RESPONSE" > .oci/upst-response.json
+
+          UPST="$(jq -r '.token // empty' .oci/upst-response.json | tr -d '\n')"
+          if [[ -n "$UPST" ]]; then
+            echo "::add-mask::$UPST"
+          fi
+
+          # Safe fingerprint (no secret value)
+          upst_len="${#UPST}"
+          upst_sha="$(printf "%s" "$UPST" | sha256sum | awk '{print $1}')"
+          cat > .oci/upst.fingerprint.txt <<EOF
+          upst_length=${upst_len}
+          upst_sha256=${upst_sha}
+          EOF
+
+          # Redact token fields in response for upload
+          jq 'del(.token) | del(.access_token) | del(.id_token) | del(.refresh_token)' \
+            .oci/upst-response.json > .oci/upst-response.redacted.json || cp .oci/upst-response.json .oci/upst-response.redacted.json
+
+          # Compact debug log
+          {
+            echo "==== OIDC JWT fingerprint ===="
+            cat .oci/id-token.fingerprint.txt
+            echo ""
+            echo "==== UPST fingerprint ===="
+            cat .oci/upst.fingerprint.txt
+            echo ""
+            echo "==== UPST response (redacted) ===="
+            cat .oci/upst-response.redacted.json
+          } > .oci/token-debug.log
+
+      - name: Upload Debug Files (safe)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oci-upst-debug-safe
+          path: |
+            .oci/token-debug.log
+            .oci/id-token.fingerprint.txt
+            .oci/upst.fingerprint.txt
+            .oci/upst-response.redacted.json
+            .oci/public_key.one_line.pem
