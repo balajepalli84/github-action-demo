@@ -1,4 +1,4 @@
-region                 = "ca-toronto-1"
+region                 = "us-ashburn-1"
 tenancy_ocid           = "ocid1.tenancy.oc1..xxxx"
 apps_compartment_ocid  = "ocid1.compartment.oc1..xxxx"
 vcn_ocid               = "ocid1.vcn.oc1.ca-toronto-1.xxxx"
