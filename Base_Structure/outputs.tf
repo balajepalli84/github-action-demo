@@ -57,3 +57,27 @@ output "subnets" {
     }
   }
 }
+output "apps_compartment_ocid" {
+  description = "Apps compartment OCID"
+  value       = module.compartments.compartments["APPS-CMP"].id
+}
+
+output "networking_compartment_ocid" {
+  description = "Networking compartment OCID"
+  value       = module.compartments.compartments["NETWORK-CMP"].id
+}
+
+output "vcn_ocid" {
+  description = "Main VCN OCID"
+  value       = oci_core_vcn.main.id
+}
+
+output "private_route_table_ocid" {
+  description = "Private route table OCID"
+  value       = oci_core_route_table.private_rt.id
+}
+
+output "security_list_ocid" {
+  description = "Security list OCID"
+  value       = oci_core_security_list.app_sl.id
+}

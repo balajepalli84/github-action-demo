@@ -4,11 +4,14 @@ terraform {
   required_providers {
     oci = {
       source  = "oracle/oci"
-      version = ">= 6.0.0"
+      version = ">= 5.0.0"
     }
   }
 }
 
 provider "oci" {
-  region = var.region
+  region              = var.region
+  tenancy_ocid        = var.tenancy_ocid
+  auth                = "securitytoken"
+  config_file_profile = "DEFAULT"
 }
