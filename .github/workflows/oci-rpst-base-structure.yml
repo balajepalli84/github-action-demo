@@ -1,4 +1,4 @@
-name: RPST - Deploy Base Structure with GitHub OIDC to OCI
+name: Demo - Deploy Base Structure with GitHub OIDC to OCI
 
 on:
   workflow_dispatch:
@@ -19,7 +19,7 @@ jobs:
       OCI_TENANCY: ${{ vars.OCI_TENANCY }}
       OCI_REGION: "ca-toronto-1"
 
-      BASE_TERRAFORM_DIR: "terraform/base-structure"
+      BASE_TERRAFORM_DIR: "Base_Structure"
 
     steps:
       - name: Checkout
