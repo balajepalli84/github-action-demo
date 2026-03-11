@@ -1,9 +1,6 @@
-###############################################################################
-# terraform.tfvars – non-sensitive defaults
-#
-# All sensitive values (tenancy_ocid, user_ocid, fingerprint, private_key,
-# parent_compartment_ocid) are supplied by GitHub Actions as TF_VAR_* secrets.
-# Do NOT commit secrets to this file.
-###############################################################################
-
-region = "us-ashburn-1"
+region                 = "ca-toronto-1"
+tenancy_ocid           = "ocid1.tenancy.oc1..xxxx"
+apps_compartment_ocid  = "ocid1.compartment.oc1..xxxx"
+vcn_ocid               = "ocid1.vcn.oc1.ca-toronto-1.xxxx"
+private_route_table_ocid = "ocid1.routetable.oc1.ca-toronto-1.xxxx"
+security_list_ocid     = "ocid1.securitylist.oc1.ca-toronto-1.xxxx"

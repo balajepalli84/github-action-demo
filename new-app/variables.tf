@@ -1,42 +1,29 @@
-###############################################################################
-# variables.tf – new-app compartment
-###############################################################################
-
-# ---------------------------------------------------------------------------
-# OCI authentication  (injected as TF_VAR_* secrets in GitHub Actions)
-# ---------------------------------------------------------------------------
+variable "region" {
+  description = "OCI region"
+  type        = string
+}
 
 variable "tenancy_ocid" {
-  description = "OCID of the OCI tenancy."
+  description = "OCI tenancy OCID"
   type        = string
 }
 
-variable "user_ocid" {
-  description = "OCID of the OCI user running Terraform."
+variable "apps_compartment_ocid" {
+  description = "Existing OCID of the apps compartment"
   type        = string
 }
 
-variable "fingerprint" {
-  description = "Fingerprint of the API key associated with user_ocid."
+variable "vcn_ocid" {
+  description = "Existing VCN OCID"
   type        = string
 }
 
-variable "private_key" {
-  description = "PEM-encoded private key content (the full key, not a file path)."
-  type        = string
-  sensitive   = true
-}
-
-variable "region" {
-  description = "OCI home region."
+variable "private_route_table_ocid" {
+  description = "Existing private route table OCID"
   type        = string
 }
 
-# ---------------------------------------------------------------------------
-# Compartment placement
-# ---------------------------------------------------------------------------
-
-variable "parent_compartment_ocid" {
-  description = "OCID of the level-1 compartment (rbalajep-test) that will own new-app."
+variable "security_list_ocid" {
+  description = "Existing security list OCID"
   type        = string
 }
