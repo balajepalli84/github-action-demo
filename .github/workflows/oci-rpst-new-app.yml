@@ -17,7 +17,7 @@ jobs:
       DOMAIN_BASE_URL: "https://idcs-2e5549d1bc154fef937243cd31fcf1af.identity.oraclecloud.com:443"
 
       OCI_TENANCY: ${{ vars.OCI_TENANCY }}
-      OCI_REGION: "ca-toronto-1"
+      OCI_REGION: "us-ashburn-1"
 
       APPS_COMPARTMENT_OCID: ${{ vars.APPS_COMPARTMENT_OCID }}
       VCN_OCID: ${{ vars.VCN_OCID }}
