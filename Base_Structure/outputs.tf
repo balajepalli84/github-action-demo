@@ -64,7 +64,7 @@ output "apps_compartment_ocid" {
 
 output "networking_compartment_ocid" {
   description = "Networking compartment OCID"
-  value       = module.compartments.compartments["NETWORK-CMP"].id
+  value       = module.compartments.compartments["NETWORKING-CMP"].id
 }
 
 output "vcn_ocid" {
@@ -74,10 +74,10 @@ output "vcn_ocid" {
 
 output "private_route_table_ocid" {
   description = "Private route table OCID"
-  value       = oci_core_route_table.private_rt.id
+  value       = oci_core_route_table.private.id
 }
 
 output "security_list_ocid" {
   description = "Security list OCID"
-  value       = oci_core_security_list.app_sl.id
+  value       = oci_core_security_list.app_env.id
 }
